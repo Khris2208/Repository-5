@@ -110,18 +110,45 @@ class Pemain:
         print(f"Lokasi: {self.lokasi_sekarang}\n")
 
 def cerita_pembukaan(pemain):
-    print("\n" + "="*50)
-    print("🌙 MISTERI TAMAN YANG TERLUPAKAN 🌙")
-    print("="*50)
+    print("\n" + "="*60)
+    print("🌙 MISTERI TAMAN YANG TERLUPAKAN - CERITA UTAMA 🌙")
+    print("="*60)
     time.sleep(0.5)
     
     print(f"\nSelamat datang, {pemain.nama}!")
-    print("\nKamu menemukan dirimu di depan sebuah taman kuno yang penuh misteri.")
-    print("Legenda mengatakan bahwa taman ini menyimpan harta karun besar...")
-    print("Namun taman ini juga dipenuhi dengan monster berbahaya dan jebakan mematikan.")
-    print("\nMisi Mu: Pecahkan 3 misteri utama untuk menemukan harta dan keluar dari taman ini!")
-    print("\nGate taman terbuka perlahan mengeluarkan kabut gelap...")
-    input("\nTekan ENTER untuk melanjutkan...")
+    print("\n" + "─"*60)
+    print("CERITA:")
+    print("─"*60)
+    
+    print("""
+500 tahun yang lalu, Taman Misteri adalah tempat paling indah di dunia.
+Raja Kuno dan Ratu Mistis memimpin dengan bijak. Namun, seorang penyihir jahat
+bernama Malachar datang dan meracuni taman dengan kutukan gelap.
+
+Raja Kuno mengumpulkan 6 Penjaga Dimensi untuk melindungi taman:
+  🌺 Peri Bunga - Penjaga Keindahan (mudah dipahami)
+  🌲 Werewolf Hutan - Penjaga Kekuatan (tantangan biasa)
+  💧 Hantu Danau - Penjaga Kebijaksanaan (tantangan biasa)
+  💻 Sage Coding - Penjaga Logika (tantangan sedang)
+  📚 Pustakawan Kuno - Penjaga Pengetahuan (tantangan sedang)
+  ⛩️ Pendeta Kuil - Penjaga Keseimbangan (tantangan sulit)
+  🐞 Debug Hunter - Penjaga Kesempurnaan (tantangan sulit)
+  🏔️ Naga Purba - Penjaga Harta Utama (sangat sulit)
+
+Setiap penjaga menyimpan Kristal Energi Dimensi. Ketika 6 kristal berkumpul,
+kutukan akan terangkat dan portal ke Ruang Harta Karun akan terbuka.
+
+MISI MU: Temui setiap penjaga, mengerti maksud mereka, dan kumpulkan kristal mereka.
+    """)
+    
+    print("─"*60)
+    print(f"Kamu akan memulai petualangan di Level: {pemain.tingkat_kesulitan.upper()}")
+    print(f"HP Awal: {pemain.hp}/{pemain.max_hp}")
+    print("─"*60)
+    print("\nGerbang taman terbuka dengan cahaya ungu mistis...")
+    print("Energi kuno terasa mengelilingimu...")
+    input("\nTekan ENTER untuk mulai petualangan...")
+
 
 def lokasi_gerbang(pemain):
     print("\n🏰 GERBANG TAMAN 🏰")
