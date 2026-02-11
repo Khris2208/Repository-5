@@ -273,6 +273,10 @@ class Pemain:
         # Penjaga Gerbang yang sudah dikalahkan
         self.penjaga_dikalahkan = set()  # {nama_penjaga}
         
+        # Tracking Pemulihan HP
+        self.pemulihan_hp_digunakan = 0  # Berapa kali sudah menggunakan pemulihan
+        self.max_pemulihan_hp = 5  # Berapa kali maksimal bisa digunakan per game
+        
         # Status effect
         self.keracunan = False
         self.terkunci = False
@@ -386,6 +390,248 @@ MISI MU: Temui setiap penjaga, mengerti maksud mereka, dan kumpulkan kristal mer
     input("\nTekan ENTER untuk mulai petualangan...")
 
 
+def tantangan_pemulihan_hp(pemain):
+    """
+    Sistem pemulihan HP dengan berbagai tantangan.
+    Pemain harus menyelesaikan tantangan untuk mendapatkan HP kembali.
+    """
+    print("\n" + "="*60)
+    print("💚 RUANG PEMULIHAN MISTERIUS 💚")
+    print("="*60)
+    
+    # Pengecekan cooldown/batasan penggunaan
+    if pemain.pemulihan_hp_digunakan >= pemain.max_pemulihan_hp:
+        print("\n❌ AKSES DITOLAK!")
+        print(f"Kamu sudah menggunakan fasilitas pemulihan {pemain.pemulihan_hp_digunakan} kali.")
+        print(f"Maksimum pemulihan per permainan adalah {pemain.max_pemulihan_hp} kali.")
+        print("\nSosok mistis berbicara:")
+        print('"Energi pemulihan telah habis. Kamu harus menyelesaikan petualanganmu'
+              ' dengan kekuatanmu sendiri."')
+        input("\nTekan ENTER untuk kembali ke gerbang...")
+        return
+    
+    sisa_pemulihan = pemain.max_pemulihan_hp - pemain.pemulihan_hp_digunakan
+    print(f"\n✨ Sisa Kesempatan Pemulihan: {sisa_pemulihan}/{pemain.max_pemulihan_hp}")
+    
+    print("\nKamu memasuki ruangan bercahaya yang penuh energi pemulihan...")
+    print("Seorang sosok mistis muncul dari kesembilan arah.\n")
+    
+    print("Sosok Mistis berbicara:")
+    print('"Setiap petualang membutuhkan istirahat. Namun aku tidak memberi hadiah'
+          ' dengan gratis."')
+    print('"Selesaikan tantanganku, dan energi pemulihan akan mengalir ke dalam tubuhmu."\n')
+    
+    print("="*60)
+    print("PILIH JENIS TANTANGAN:")
+
+    print("="*60)
+    print("1. 🧩 RIDDLE MISTIS (Puzzle logika)")
+    print("2. 🧮 MATH CHALLENGE (Tantangan matematika)")
+    print("3. 🎯 MEMORY GAME (Permainan memori)")
+    print("4. ❌ Batal")
+    
+    pilihan = input("\nPilihan (1-4): ").strip()
+    
+    if pilihan == "4":
+        print("\nKamu membatalkan pemulihan dan meninggalkan ruangan.")
+        return
+    
+    berhasil = False
+    
+    if pilihan == "1":
+        # RIDDLE MISTIS
+        berhasil = tantangan_riddle(pemain)
+    elif pilihan == "2":
+        # MATH CHALLENGE
+        berhasil = tantangan_matematika(pemain)
+    elif pilihan == "3":
+        # MEMORY GAME
+        berhasil = tantangan_memori(pemain)
+    else:
+        print("❌ Pilihan tidak valid!")
+        return
+    
+    # Tambah counter penggunaan
+    pemain.pemulihan_hp_digunakan += 1
+    
+    if berhasil:
+        # Hitung pemulihan berdasarkan tingkat kesulitan
+        if pemain.tingkat_kesulitan == "mudah":
+            pemulihan = int(pemain.max_hp * 0.5)  # 50% HP
+        elif pemain.tingkat_kesulitan == "sulit":
+            pemulihan = int(pemain.max_hp * 0.3)  # 30% HP
+        else:  # normal
+            pemulihan = int(pemain.max_hp * 0.4)  # 40% HP
+        
+        pemain.hp = min(pemain.hp + pemulihan, pemain.max_hp)
+        
+        print("\n" + "✨"*30)
+        print("✨ TANTANGAN BERHASIL! ✨")
+        print("✨"*30)
+        print(f"Energi pemulihan menyala terang dari kaki hingga kepala!")
+        print(f"HP Pemulihan: +{pemulihan}")
+        print(f"HP Sekarang: {pemain.hp}/{pemain.max_hp}")
+        sisa = pemain.max_pemulihan_hp - pemain.pemulihan_hp_digunakan
+        print(f"Sisa kesempatan: {sisa}/{pemain.max_pemulihan_hp}")
+        print("="*60)
+    else:
+        print("\n" + "❌"*30)
+        print("❌ TANTANGAN GAGAL! ❌")
+        print("❌"*30)
+        print("Energi pemulihan gagal mengalir ke tubuhmu.")
+        print("Kamu harus mencoba lagi nanti dengan hati lebih fokus.")
+        print("="*60)
+    
+    input("\nTekan ENTER untuk kembali ke gerbang...")
+
+
+def tantangan_riddle(pemain):
+    """Tantangan riddle/puzzle untuk pemulihan HP"""
+    riddles = [
+        {
+            "pertanyaan": "Aku memiliki kota tapi tidak ada rumah? Hutan tapi tidak ada pohon? Air tapi tidak ada ikan? Apa aku?",
+            "jawaban": ["peta", "map"],
+            "hint": "Sesuatu yang menunjukkan lokasi"
+        },
+        {
+            "pertanyaan": "Aku memiliki wajah dan dua tangan tetapi tidak memiliki lengan atau kaki? Apa aku?",
+            "jawaban": ["jam", "clock", "waktu"],
+            "hint": "Sesuatu yang mengukur waktu"
+        },
+        {
+            "pertanyaan": "Semakin banyak kamu mengambil, semakin banyak tersisa. Apa aku?",
+            "jawaban": ["jejak", "footsteps", "langkah kaki"],
+            "hint": "Sesuatu yang ditinggalkan saat berjalan"
+        }
+    ]
+    
+    riddle = random.choice(riddles)
+    
+    print("\n" + "🧩"*30)
+    print("\n🧩 RIDDLE MISTIS 🧩")
+    print("="*60)
+    print(f"Pertanyaan: {riddle['pertanyaan']}")
+    print(f"Hint: {riddle['hint']}")
+    print("="*60)
+    
+    jawaban_pemain = input("\nJawabanmu: ").strip().lower()
+    
+    jawaban_benar = any(jawaban_pemain == j.lower() for j in riddle['jawaban'])
+    
+    if jawaban_benar:
+        print(f"\n✓ BENAR! Jawabannya adalah: {riddle['jawaban'][0]}")
+        return True
+    else:
+        print(f"\n✗ SALAH! Jawaban yang benar adalah: {riddle['jawaban'][0]}")
+        return False
+
+
+def tantangan_matematika(pemain):
+    """Tantangan matematika untuk pemulihan HP"""
+    print("\n" + "🧮"*30)
+    print("\n🧮 MATH CHALLENGE 🧮")
+    print("="*60)
+    print("Selesaikan 2 dari 3 soal matematika dengan benar!\n")
+    
+    benar = 0
+    total = 3
+    
+    soal = [
+        {
+            "pertanyaan": "Berapa hasil dari 7 × 8 - 12 + 4?",
+            "jawaban": 48,
+            "opsi": ["36", "48", "60", "72"]
+        },
+        {
+            "pertanyaan": "Jika x + 5 = 20, berapakah nilai x?",
+            "jawaban": 15,
+            "opsi": ["10", "15", "20", "25"]
+        },
+        {
+            "pertanyaan": "Berapa percentage dari 25% dari 200?",
+            "jawaban": 50,
+            "opsi": ["30", "40", "50", "60"]
+        }
+    ]
+    
+    random.shuffle(soal)
+    
+    for i, s in enumerate(soal, 1):
+        print(f"Soal {i}/3: {s['pertanyaan']}")
+        for j, opsi in enumerate(s['opsi'], 1):
+            print(f"  {j}. {opsi}")
+        
+        jawaban = input("Jawaban (1-4): ").strip()
+        
+        try:
+            index = int(jawaban) - 1
+            if 0 <= index < len(s['opsi']):
+                if int(s['opsi'][index]) == s['jawaban']:
+                    print("✓ BENAR!\n")
+                    benar += 1
+                else:
+                    print(f"✗ SALAH! Jawaban yang benar adalah {s['jawaban']}\n")
+            else:
+                print("❌ Input tidak valid!\n")
+        except:
+            print("❌ Input tidak valid!\n")
+    
+    print("="*60)
+    print(f"HASIL: {benar}/3 soal benar")
+    print("="*60)
+    
+    if benar >= 2:
+        print("✓ Kamu lulus math challenge!")
+        return True
+    else:
+        print("✗ Kamu tidak lulus math challenge.")
+        return False
+
+
+def tantangan_memori(pemain):
+    """Tantangan memory game untuk pemulihan HP"""
+    print("\n" + "🎯"*30)
+    print("\n🎯 MEMORY GAME 🎯")
+    print("="*60)
+    print("Ingat pola angka dan tuliskan kembali!\n")
+    
+    # Buat sequence random
+    sequence = [random.randint(1, 4) for _ in range(5)]
+    
+    print("Perhatikan pola angka ini selama 5 detik:")
+    print("="*60)
+    time.sleep(1)
+    
+    # Tampilkan pola
+    for num in sequence:
+        print(f"  {num}", end="", flush=True)
+        time.sleep(0.5)
+    
+    print("\n" + "="*60)
+    time.sleep(2)
+    
+    # Clear screen effect
+    print("\n[Pola telah disembunyikan. Silakan ketik urutan angka yang kamu ingat]\n")
+    time.sleep(1)
+    
+    jawaban = input("Urutan angka (pisahkan dengan spasi): ").strip().split()
+    
+    # Convert ke integer
+    try:
+        jawaban = [int(x) for x in jawaban]
+    except:
+        print("❌ Input tidak valid!")
+        return False
+    
+    if jawaban == sequence:
+        print("\n✓ BENAR! Kamu mengingat pola dengan sempurna!")
+        return True
+    else:
+        print(f"\n✗ SALAH! Pola yang benar adalah: {sequence}")
+        print(f"Jawaban mu: {jawaban}")
+        return False
+
+
 def lokasi_gerbang(pemain):
     print("\n🏰 GERBANG TAMAN 🏰")
     print("─" * 50)
@@ -415,10 +661,11 @@ def lokasi_gerbang(pemain):
     
     print("\n⚔️ FASILITAS SPESIAL")
     print("9. 🗡️ Ruang Senjata (Carilah senjata berdasarkan kristal)")
-    print("10. 📊 Lihat Status & Senjata")
-    print("11. Keluar Game")
+    print("10. � Ruang Pemulihan HP (Tantang dirimu untuk pemulihan)")
+    print("11. 📊 Lihat Status & Senjata")
+    print("12. Keluar Game")
     
-    pilihan = input("\nPilihan (1-11): ")
+    pilihan = input("\nPilihan (1-12): ")
     
     # Menggunakan if-else untuk mengarahkan ke jalur yang dipilih (berdasarkan urutan level)
     if pilihan == "1":
@@ -440,10 +687,12 @@ def lokasi_gerbang(pemain):
     elif pilihan == "9":
         ruang_senjata(pemain)
     elif pilihan == "10":
+        tantangan_pemulihan_hp(pemain)
+    elif pilihan == "11":
         pemain.lihat_status()
         pemain.lihat_senjata()
         lokasi_gerbang(pemain)
-    elif pilihan == "11":
+    elif pilihan == "12":
         print("\nTerima kasih telah bermain! 👋")
         return False
     else:
@@ -538,6 +787,20 @@ def ruang_senjata(pemain):
             print("❌ Input tidak valid!")
             ruang_senjata(pemain)
 \n\ndef semak_hutan_gelap(pemain):
+    # PERTARUNGAN PENJAGA GERBANG
+    penjaga_menang = pertarungan_penjaga_gerbang(
+        pemain=pemain,
+        nama_penjaga="Werewolf Junior",
+        deskripsi_penjaga="Seekor werewolf muda dengan tubuh bercat abu-abu berdiri menjaga pintu hutan.",
+        hp_penjaga=50,
+        damage_penjaga=12,
+        level_lokasi="NORMAL"
+    )
+    
+    if not penjaga_menang:
+        print("\n❌ Werewolf tidak membiarkanmu masuk ke Hutan Gelap.")
+        return
+    
     print("\n" + "="*60)
     print("🌲 HUTAN GELAP - LOKASI NORMAL 🌲")
     print("="*60)
@@ -765,6 +1028,20 @@ def misteri_pohon_tua(pemain):
 
 
 def danau_misterius(pemain):
+    # PERTARUNGAN PENJAGA GERBANG
+    penjaga_menang = pertarungan_penjaga_gerbang(
+        pemain=pemain,
+        nama_penjaga="Roh Danau Gerbang",
+        deskripsi_penjaga="Sosok transparan berbentuk manusia muncul dari air danau.",
+        hp_penjaga=50,
+        damage_penjaga=11,
+        level_lokasi="NORMAL"
+    )
+    
+    if not penjaga_menang:
+        print("\n❌ Roh danau mencegahmu untuk memasuki danau.")
+        return
+    
     print("\n" + "="*60)
     print("💧 DANAU MISTERIUS - LOKASI NORMAL 💧")
     print("="*60)
@@ -865,6 +1142,20 @@ melampaui jebakan pikiran saya. Teka-teki ini telah menunggu 500 tahun...'
 
 
 def kuil_kuno(pemain):
+    # PERTARUNGAN PENJAGA GERBANG
+    penjaga_menang = pertarungan_penjaga_gerbang(
+        pemain=pemain,
+        nama_penjaga="Pendeta Perak",
+        deskripsi_penjaga="Seorang pendeta bertubuuh kokoh dengan jubah perak berdiri menjaga kuil.",
+        hp_penjaga=70,
+        damage_penjaga=16,
+        level_lokasi="SULIT"
+    )
+    
+    if not penjaga_menang:
+        print("\n❌ Pendeta Kuil tidak membiarkanmu masuk ke dalam kuil.")
+        return
+    
     print("\n" + "="*60)
     print("⛩️ KUIL KUNO - LOKASI SULIT ⛩️")
     print("="*60)
@@ -1451,6 +1742,20 @@ kamu bisa memperbaiki kesalahan-kesalahan kritis!'
     pemain.lokasi_sekarang = "gerbang"
 
 def gua_naga_purba(pemain):
+    # PERTARUNGAN PENJAGA GERBANG
+    penjaga_menang = pertarungan_penjaga_gerbang(
+        pemain=pemain,
+        nama_penjaga="Naga Gerbang",
+        deskripsi_penjaga="Naga kecil berwarna merah tua menjaga gerbang gua dengan pertarungan sengit.",
+        hp_penjaga=90,
+        damage_penjaga=20,
+        level_lokasi="SANGAT SULIT"
+    )
+    
+    if not penjaga_menang:
+        print("\n❌ Naga Gerbang tidak membiarkanmu masuk ke Gua Naga Purba.")
+        return
+    
     """
     Gua Naga Purba - Lokasi SANGAT SULIT - Pertarungan Final BOSS
     Penjaga: Naga Purba (Manifestasi dari Kutukan Malachar)
@@ -1672,6 +1977,20 @@ def taman_bunga_pesona(pemain):
     Taman Bunga Pesona - Lokasi MUDAH - Pengenalan Cerita
     Penjaga: Peri Bunga (Penjaga Keindahan)
     """
+    # PERTARUNGAN PENJAGA GERBANG
+    penjaga_menang = pertarungan_penjaga_gerbang(
+        pemain=pemain,
+        nama_penjaga="Peri Bunga Gerbang",
+        deskripsi_penjaga="Peri bersayap indah dengan cahaya emas terlihat di depan pintu masuk.",
+        hp_penjaga=40,
+        damage_penjaga=8,
+        level_lokasi="MUDAH"
+    )
+    
+    if not penjaga_menang:
+        print("\n❌ Kamu tidak bisa memasuki Taman Bunga Pesona tanpa mengalahkan penjaganya.")
+        return
+    
     print("\n" + "="*60)
     print("🌺 TAMAN BUNGA PESONA - LOKASI MUDAH 🌺")
     print("="*60)
