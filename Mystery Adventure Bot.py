@@ -22,6 +22,19 @@ class Senjata:
     def __str__(self):
         return f"{self.nama} (Dmg: {self.damage_min}-{self.damage_max}, Mana: {self.mana_cost}, Level: {self.level_diperlukan})"
 
+class Hadiah:
+    """Class untuk merepresentasikan hadiah/achievement dalam game"""
+    def __init__(self, nama, ikon, deskripsi, jenis):
+        self.nama = nama
+        self.ikon = ikon
+        self.deskripsi = deskripsi
+        self.jenis = jenis  # 'badge', 'achievement', 'reward'
+        self.diperoleh = False
+    
+    def __str__(self):
+        status = "✓" if self.diperoleh else "✗"
+        return f"{status} {self.ikon} {self.nama}: {self.deskripsi}"
+
 # Database senjata yang dapat ditemukan
 DATABASE_SENJATA = {
     "pedang_kayu": Senjata(
@@ -65,6 +78,82 @@ DATABASE_SENJATA = {
         mana_cost=30,
         level_diperlukan=5,
         deskripsi="Senjata paling kuat, dipercayakan oleh para naga kuno"
+    )
+}
+
+# Database hadiah/achievement
+DATABASE_HADIAH = {
+    "pemenang_sejati": Hadiah(
+        "Pemenang Sejati",
+        "🏆",
+        "Menyelesaikan game dengan mengumpulkan 7 kristal",
+        "achievement"
+    ),
+    "legenda_mudah": Hadiah(
+        "Legenda Mudah",
+        "⭐",
+        "Menyelesaikan game dengan tingkat kesulitan MUDAH",
+        "badge"
+    ),
+    "juara_normal": Hadiah(
+        "Juara Normal",
+        "⚔️",
+        "Menyelesaikan game dengan tingkat kesulitan NORMAL",
+        "badge"
+    ),
+    "prajurit_besi": Hadiah(
+        "Prajurit Besi",
+        "🛡️",
+        "Menyelesaikan game dengan tingkat kesulitan SULIT",
+        "badge"
+    ),
+    "master_pertarungan": Hadiah(
+        "Master Pertarungan",
+        "⚡",
+        "Menang 10+ pertarungan dengan penjaga gerbang",
+        "achievement"
+    ),
+    "strategis_sejati": Hadiah(
+        "Strategis Sejati",
+        "🧠",
+        "Menyelesaikan game tanpa menggunakan fasilitas pemulihan HP",
+        "achievement"
+    ),
+    "sekuat_naga": Hadiah(
+        "Sekuat Naga",
+        "🐉",
+        "Menyelesaikan game dengan HP sisa lebih dari 50%",
+        "achievement"
+    ),
+    "cepat_kilat": Hadiah(
+        "Cepat Kilat",
+        "⚡",
+        "Menyelesaikan game dalam waktu kurang dari 20 menit",
+        "achievement"
+    ),
+    "kolektor_kristal": Hadiah(
+        "Kolektor Kristal",
+        "💎",
+        "Mengumpulkan semua 7 kristal energi",
+        "achievement"
+    ),
+    "pembaca_misterius": Hadiah(
+        "Pembaca Misterius",
+        "📖",
+        "Menjelajahi semua lokasi dalam game",
+        "achievement"
+    ),
+    "tanpa_jatuh": Hadiah(
+        "Tanpa Jatuh",
+        "🌟",
+        "Menyelesaikan game tanpa pernah kehabisan HP",
+        "achievement"
+    ),
+    "pembunuh_pertama": Hadiah(
+        "Pembunuh Pertama",
+        "🎯",
+        "Menyelesaikan game untuk pertama kalinya dengan akun ini",
+        "reward"
     )
 }
 
@@ -150,7 +239,8 @@ class SistemLogin:
                 "tanggal_dibuat": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "total_login": 0,
                 "riwayat_login": [],
-                "statistik_game": []
+                "statistik_game": [],
+                "hadiah_dikumpulkan": []
             }
         self.simpan_histori()  # Simpan histori ke file
         
@@ -2298,7 +2388,150 @@ Taman akan dipulihkan menjadi tempat indah yang pernah kami ciptakan.
     print("="*70)
     print("Sampai jumpa di petualangan berikutnya! 👋\n")
     
-    input("Tekan ENTER untuk keluar dari game...")
+    input("Tekan ENTER untuk melihat hadiah kamu...")
+
+
+def hitung_hadiah_pemain(pemain, login_system, username):
+    """
+    Hitung dan tentukan hadiah yang akan diterima pemain berdasarkan performa
+    Return list berisi hadiah yang diperoleh
+    """
+    hadiah_diperoleh = []
+    durasi = datetime.now() - pemain.waktu_mulai
+    durasi_detik = durasi.total_seconds()
+    durasi_menit = durasi_detik / 60
+    
+    # Hadiah utama: Pemenang Sejati (semua pemain yang menyelesaikan)
+    hadiah_diperoleh.append("pemenang_sejati")
+    
+    # Badge berdasarkan tingkat kesulitan
+    if pemain.tingkat_kesulitan == "mudah":
+        hadiah_diperoleh.append("legenda_mudah")
+    elif pemain.tingkat_kesulitan == "normal":
+        hadiah_diperoleh.append("juara_normal")
+    elif pemain.tingkat_kesulitan == "sulit":
+        hadiah_diperoleh.append("prajurit_besi")
+    
+    # Master Pertarungan - Menang 10+ pertarungan
+    if pemain.pertempuran_menang >= 10:
+        hadiah_diperoleh.append("master_pertarungan")
+    
+    # Strategis Sejati - Tidak menggunakan pemulihan HP
+    if pemain.pemulihan_hp_digunakan == 0:
+        hadiah_diperoleh.append("strategis_sejati")
+    
+    # Sekuat Naga - HP sisa lebih dari 50%
+    if pemain.hp > pemain.max_hp * 0.5:
+        hadiah_diperoleh.append("sekuat_naga")
+    
+    # Cepat Kilat - Selesai dalam kurang dari 20 menit
+    if durasi_menit < 20:
+        hadiah_diperoleh.append("cepat_kilat")
+    
+    # Kolektor Kristal - Semua 7 kristal
+    if pemain.misteri_terpecahkan >= 7:
+        hadiah_diperoleh.append("kolektor_kristal")
+    
+    # Pembaca Misterius - Kunjungi semua lokasi (8 lokasi)
+    if len(pemain.lokasi_dikunjungi) >= 8:
+        hadiah_diperoleh.append("pembaca_misterius")
+    
+    # Pembunuh Pertama - Kali pertama menyelesaikan (cek riwayat game)
+    if username in login_system.histori_login:
+        games_before = len([g for g in login_system.histori_login[username]["statistik_game"] 
+                           if g["status"] == "menang"])
+        if games_before == 0:  # Belum pernah menang sebelumnya
+            hadiah_diperoleh.append("pembunuh_pertama")
+    
+    return hadiah_diperoleh
+
+
+def tampilkan_hadiah_pemain(pemain, hadiah_list):
+    """
+    Tampilkan hadiah yang diperoleh pemain dengan animasi
+    """
+    print("\n" + "="*70)
+    print("🎁 HADIAH DAN ACHIEVEMENT YANG KAMU PEROLEH! 🎁")
+    print("="*70)
+    
+    if not hadiah_list:
+        print("Tidak ada hadiah tambahan yang diperoleh.")
+        return
+    
+    # Kategorisasi hadiah
+    badges = []
+    achievements = []
+    rewards = []
+    
+    for hadiah_key in hadiah_list:
+        if hadiah_key in DATABASE_HADIAH:
+            hadiah = DATABASE_HADIAH[hadiah_key]
+            if hadiah.jenis == "badge":
+                badges.append(hadiah)
+            elif hadiah.jenis == "achievement":
+                achievements.append(hadiah)
+            elif hadiah.jenis == "reward":
+                rewards.append(hadiah)
+    
+    # Tampilkan Badges
+    if badges:
+        print("\n🏅 BADGES:")
+        print("─"*70)
+        for hadiah in badges:
+            print(f"  {hadiah.ikon} {hadiah.nama}")
+            print(f"     └─ {hadiah.deskripsi}")
+            time.sleep(0.5)
+    
+    # Tampilkan Achievements
+    if achievements:
+        print("\n⭐ ACHIEVEMENTS:")
+        print("─"*70)
+        for hadiah in achievements:
+            print(f"  {hadiah.ikon} {hadiah.nama}")
+            print(f"     └─ {hadiah.deskripsi}")
+            time.sleep(0.5)
+    
+    # Tampilkan Rewards
+    if rewards:
+        print("\n💝 SPECIAL REWARDS:")
+        print("─"*70)
+        for hadiah in rewards:
+            print(f"  {hadiah.ikon} {hadiah.nama}")
+            print(f"     └─ {hadiah.deskripsi}")
+            time.sleep(0.5)
+    
+    total_hadiah = len(hadiah_list)
+    print("\n" + "="*70)
+    print(f"✨ Total Hadiah: {total_hadiah} ✨")
+    print("="*70)
+
+
+def simpan_hadiah_pemain(pemain, username, login_system, hadiah_list):
+    """
+    Simpan hadiah yang diperoleh pemain ke dalam histori
+    """
+    if username in login_system.histori_login:
+        for hadiah_key in hadiah_list:
+            if hadiah_key in DATABASE_HADIAH:
+                hadiah_obj = DATABASE_HADIAH[hadiah_key]
+                hadiah_entry = {
+                    "hadiah_id": hadiah_key,
+                    "nama": hadiah_obj.nama,
+                    "ikon": hadiah_obj.ikon,
+                    "deskripsi": hadiah_obj.deskripsi,
+                    "jenis": hadiah_obj.jenis,
+                    "tanggal_peroleh": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                
+                # Hanya simpan jika belum ada (menghindari duplikat)
+                existing = [h for h in login_system.histori_login[username]["hadiah_dikumpulkan"]
+                           if h["hadiah_id"] == hadiah_key]
+                if not existing:
+                    login_system.histori_login[username]["hadiah_dikumpulkan"].append(hadiah_entry)
+        
+        login_system.simpan_histori()
+        print(f"[💾] Hadiah berhasil disimpan ke akun kamu!")
+
 
 def simpan_statistik_game(pemain, username, login_system, status_akhir):
     """
