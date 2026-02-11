@@ -1,6 +1,74 @@
 import time
 import random
 
+class SistemLogin:
+    """Sistem Login dan Registrasi untuk game"""
+    def __init__(self):
+        # Database pengguna dengan username dan password
+        self.akun_terdaftar = {}
+    
+    def registrasi(self):
+        """Proses registrasi akun baru"""
+        print("\n" + "="*50)
+        print("📝 REGISTRASI AKUN BARU")
+        print("="*50)
+        
+        username = input("Masukkan username: ").strip()
+        
+        if username in self.akun_terdaftar:
+            print("❌ Username sudah terdaftar! Gunakan username lain.")
+            return False
+        
+        password = input("Masukkan password: ").strip()
+        
+        if len(password) < 4:
+            print("❌ Password minimal 4 karakter!")
+            return False
+        
+        self.akun_terdaftar[username] = password
+        print(f"✓ Akun '{username}' berhasil dibuat! Selamat datang!")
+        return True
+    
+    def login(self):
+        """Proses login akun"""
+        print("\n" + "="*50)
+        print("🔐 LOGIN AKUN")
+        print("="*50)
+        
+        username = input("Masukkan username: ").strip()
+        password = input("Masukkan password: ").strip()
+        
+        if username in self.akun_terdaftar and self.akun_terdaftar[username] == password:
+            print(f"✓ Selamat datang kembali, {username}! 👋")
+            return username
+        else:
+            print("❌ Username atau password salah!")
+            return None
+    
+    def menu_utama_login(self):
+        """Menu utama untuk login dan registrasi"""
+        while True:
+            print("\n" + "╔" + "="*48 + "╗")
+            print("║" + "  🎮 MENU UTAMA - TAMAN MISTERI  ".center(50) + "║")
+            print("╚" + "="*48 + "╝")
+            print("\n1. Login")
+            print("2. Registrasi")
+            print("3. Keluar Game")
+            
+            pilihan = input("\nPilihan (1-3): ")
+            
+            if pilihan == "1":
+                username = self.login()
+                if username:
+                    return username
+            elif pilihan == "2":
+                self.registrasi()
+            elif pilihan == "3":
+                print("\nTerima kasih telah bermain! 👋")
+                exit()
+            else:
+                print("❌ Pilihan tidak valid!")
+
 class Pemain:
     def __init__(self, nama):
         self.nama = nama
@@ -648,13 +716,20 @@ def gunung_bug(pemain):
     pemain.lokasi_sekarang = "gerbang"
 
 def game_utama():
-    print("╔" + "="*48 + "╗")
+    # Inisialisasi sistem login
+    login_system = SistemLogin()
+    
+    # Menu login dan registrasi
+    username_pemain = login_system.menu_utama_login()
+    
+    # Tampilkan header game
+    print("\n" + "╔" + "="*48 + "╗")
     print("║" + " "*48 + "║")
     print("║" + "  🌙 PETUALANGAN TAMAN MISTERI FANTASI 🌙  ".center(48) + "║")
     print("║" + " "*48 + "║")
     print("╚" + "="*48 + "╝")
     
-    print("\nSelamat datang di game petualangan!")
+    print(f"\nHalo {username_pemain}! Selamat datang di petualangan!")
     nama = input("Siapa nama karakter Anda? ")
     
     pemain = Pemain(nama)
@@ -671,87 +746,3 @@ def game_utama():
     
 if __name__ == "__main__":
     game_utama()
-
-    class SistemLogin:
-        def __init__(self):
-            self.akun_terdaftar = {}
-        
-        def registrasi(self):
-            print("\n" + "="*50)
-            print("📝 REGISTRASI AKUN BARU")
-            print("="*50)
-            
-            username = input("Masukkan username: ").strip()
-            
-            if username in self.akun_terdaftar:
-                print("❌ Username sudah terdaftar! Gunakan username lain.")
-                return False
-            
-            password = input("Masukkan password: ").strip()
-            
-            if len(password) < 4:
-                print("❌ Password minimal 4 karakter!")
-                return False
-            
-            self.akun_terdaftar[username] = password
-            print(f"✓ Akun '{username}' berhasil dibuat! Selamat datang!")
-            return True
-        
-        def login(self):
-            print("\n" + "="*50)
-            print("🔐 LOGIN AKUN")
-            print("="*50)
-            
-            username = input("Masukkan username: ").strip()
-            password = input("Masukkan password: ").strip()
-            
-            if username in self.akun_terdaftar and self.akun_terdaftar[username] == password:
-                print(f"✓ Selamat datang kembali, {username}! 👋")
-                return username
-            else:
-                print("❌ Username atau password salah!")
-                return None
-        
-        def menu_utama_login(self):
-            while True:
-                print("\n" + "╔" + "="*48 + "╗")
-                print("║" + "  🎮 MENU UTAMA - TAMAN MISTERI  ".center(50) + "║")
-                print("╚" + "="*48 + "╝")
-                print("\n1. Login")
-                print("2. Registrasi")
-                print("3. Keluar Game")
-                
-                pilihan = input("\nPilihan (1-3): ")
-                
-                if pilihan == "1":
-                    username = self.login()
-                    if username:
-                        return username
-                elif pilihan == "2":
-                    self.registrasi()
-                elif pilihan == "3":
-                    print("\nTerima kasih telah bermain! 👋")
-                    exit()
-                else:
-                    print("❌ Pilihan tidak valid!")
-
-    login_system = SistemLogin()
-    username_pemain = login_system.menu_utama_login()
-
-    print("\n" + "="*50)
-    print("🌙 PETUALANGAN TAMAN MISTERI FANTASI 🌙".center(50))
-    print("="*50)
-
-    nama = input(f"\nHalo {username_pemain}! Siapa nama karakter Anda? ")
-
-    pemain = Pemain(nama)
-    cerita_pembukaan(pemain)
-
-    pemain.lokasi_sekarang = "gerbang"
-
-    while pemain.hp > 0:
-        if lokasi_gerbang(pemain) == False:
-            break
-        
-        if pemain.misteri_terpecahkan >= 3 and pemain.lokasi_sekarang == "gerbang":
-            print("\n✨ Kamu merasa kekuatan misteri taman memintamu kembali ke kuil... ✨")
