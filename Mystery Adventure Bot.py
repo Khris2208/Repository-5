@@ -129,37 +129,49 @@ def lokasi_gerbang(pemain):
     print("Kamu berdiri di depan gerbang besar berusia ratusan tahun.")
     print("Patung singa kuno menjaga kedua sisinya.")
     print(f"Status: Level {pemain.tingkat_kesulitan.upper()} | HP: {pemain.hp}/{pemain.max_hp}")
-    print("\nKe mana kamu ingin pergi?")
-    print("1. 🌲 Hutan Gelap (timur) - Tingkat: Normal")
-    print("2. 💧 Danau Misterius (barat) - Tingkat: Normal")
-    print("3. ⛩️ Kuil Kuno (utara) - Tingkat: Sulit")
-    print("4. 💻 Lembah Coding (selatan) - Tingkat: Sedang")
-    print("5. 🐞 Gunung Bug (barat daya) - Tingkat: Sulit")
-    print("6. 🏔️ Gua Naga Purba (timur laut) - Tingkat: Sangat Sulit")
-    print("7. 🌺 Taman Bunga Pesona (tenggara) - Tingkat: Mudah")
-    print("8. 📚 Perpustakaan Kuno (tengah) - Tingkat: Sedang")
-    print("9. Lihat Status")
+    print("\n" + "="*50)
+    print("📍 DAFTAR LOKASI (Diurutkan Berdasarkan Tingkat Kesulitan)")
+    print("="*50)
+    print("\n🟢 MUDAH")
+    print("1. 🌺 Taman Bunga Pesona (tenggara)")
+    
+    print("\n🟡 NORMAL")
+    print("2. 🌲 Hutan Gelap (timur)")
+    print("3. 💧 Danau Misterius (barat)")
+    
+    print("\n🟠 SEDANG")
+    print("4. 💻 Lembah Coding (selatan)")
+    print("5. 📚 Perpustakaan Kuno (tengah)")
+    
+    print("\n🔴 SULIT")
+    print("6. ⛩️ Kuil Kuno (utara)")
+    print("7. 🐞 Gunung Bug (barat daya)")
+    
+    print("\n🔥 SANGAT SULIT")
+    print("8. 🏔️ Gua Naga Purba (timur laut)")
+    
+    print("\n9. Lihat Status")
     print("10. Keluar Game")
     
     pilihan = input("\nPilihan (1-10): ")
     
-    # Menggunakan if-else untuk mengarahkan ke jalur yang dipilih
+    # Menggunakan if-else untuk mengarahkan ke jalur yang dipilih (berdasarkan urutan level)
     if pilihan == "1":
-        semak_hutan_gelap(pemain)
+        taman_bunga_pesona(pemain)
     elif pilihan == "2":
-        danau_misterius(pemain)
+        semak_hutan_gelap(pemain)
     elif pilihan == "3":
-        kuil_kuno(pemain)
+        danau_misterius(pemain)
     elif pilihan == "4":
         lembah_coding(pemain)
     elif pilihan == "5":
-        gunung_bug(pemain)
-    elif pilihan == "6":
-        gua_naga_purba(pemain)
-    elif pilihan == "7":
-        taman_bunga_pesona(pemain)
-    elif pilihan == "8":
         perpustakaan_kuno(pemain)
+    elif pilihan == "6":
+        kuil_kuno(pemain)
+    elif pilihan == "7":
+        gunung_bug(pemain)
+    elif pilihan == "8":
+        gua_naga_purba(pemain)
     elif pilihan == "9":
         pemain.lihat_status()
         lokasi_gerbang(pemain)
@@ -738,6 +750,255 @@ def gunung_bug(pemain):
     input("\nTekan ENTER untuk kembali ke gerbang...")
     pemain.lokasi_sekarang = "gerbang"
 
+def gua_naga_purba(pemain):
+    """
+    Gua Naga Purba - Lokasi SANGAT SULIT dengan harta karun terbesar
+    """
+    print("\n🐉 GUA NAGA PURBA (SANGAT SULIT) 🐉")
+    print("─" * 50)
+    print("Kamu memasuki gua yang sangat gelap dan berbau sulfur.")
+    print("Batu-batu raksasa dengan goresan cakar naga terlihat di mana-mana!")
+    print("Suara gemuruh seperti pertarungan kuno terdengar dari dalam gua...")
+    
+    # Multiplier tingkat kesulitan
+    if pemain.tingkat_kesulitan == "sulit":
+        damage = 40
+        reward_hp = 25
+    else:
+        damage = 30
+        reward_hp = 35
+    
+    print("\n" + "="*50)
+    print("⚔️ PERTARUNGAN DENGAN NAGA PURBA! ⚔️")
+    print("="*50)
+    
+    print("\nNaga Purba muncul dengan napas api yang membara!")
+    print("Dia adalah makhluk paling berbahaya di taman ini!")
+    
+    print("\nApa yang akan kamu lakukan?")
+    print("1. Serang dengan semua kekuatan")
+    print("2. Gunakan taktik defensif")
+    print("3. Coba negosiasi")
+    
+    pilihan = input("\nPilihan (1-3): ")
+    
+    if pilihan == "1":
+        if random.random() > 0.4:
+            print("\n⚔️ Ledakan pertarungan yang luar biasa!")
+            print("Kamu berhasil mengalahkan Naga Purba!")
+            print("Harta karun berupa Mahkota Platinum muncul! 👑")
+            pemain.ambil_item("Mahkota Platinum")
+            pemain.misteri_terpecahkan += 1
+            pemain.hp += reward_hp
+            print(f"HP Anda pulih! (+{reward_hp}, sekarang: {pemain.hp})")
+        else:
+            print("\n✗ Naga Purba terlalu kuat! Serangannya sangat dahsyat!")
+            pemain.hp -= damage
+            print(f"HP berkurang {damage} (sekarang: {pemain.hp})")
+    elif pilihan == "2":
+        print("\nKamu mempertahankan posisi dan menunggu waktu yang tepat...")
+        if random.random() > 0.5:
+            print("Naga itu lelah dan memberikan kesempatan emas!")
+            print("Kamu berhasil mengalahkan Naga Purba dengan bijak!")
+            print("Permata Naga Purba jatuh ke tanganmu! 💎")
+            pemain.ambil_item("Permata Naga Purba")
+            pemain.misteri_terpecahkan += 1
+            pemain.hp += reward_hp
+        else:
+            print("Naga itu masih terlalu agresif!")
+            pemain.hp -= (damage - 10)
+            print(f"HP berkurang {damage - 10} (sekarang: {pemain.hp})")
+    elif pilihan == "3":
+        print("\nKamu memandang mata naga dengan penuh keyakinan...")
+        print("Naga melirik, seolah mengerti maksudmu...")
+        print("Sebuah suara dalam berbicara: 'Kamu adalah manusia yang berbeda.'")
+        print("Naga memberikan Kristal Kebijaksanaan! 🔮")
+        pemain.ambil_item("Kristal Kebijaksanaan")
+        pemain.misteri_terpecahkan += 1
+        pemain.hp += (reward_hp + 10)
+        print(f"HP Anda pulih! (+{reward_hp + 10}, sekarang: {pemain.hp})")
+    
+    if pemain.hp <= 0:
+        game_over_kalah(pemain)
+        return
+    
+    input("\nTekan ENTER untuk kembali ke gerbang...")
+    pemain.lokasi_sekarang = "gerbang"
+
+def taman_bunga_pesona(pemain):
+    """
+    Taman Bunga Pesona - Lokasi MUDAH dengan cerita romantis
+    """
+    print("\n🌺 TAMAN BUNGA PESONA (MUDAH) 🌺")
+    print("─" * 50)
+    print("Kamu memasuki taman yang indah penuh dengan bunga-bunga berwarna cerah.")
+    print("Aroma bunga yang menenangkan memenuhi setiap aspek pikiranmu.")
+    print("Seorang peri bunga muncul dan tersenyum ramah kepadamu...")
+    
+    print("\n'Selamat datang di Taman Bunga Pesona!'")
+    print("'Aku adalah Peri Bunga, penjaga taman ini.'")
+    print("'Jika kamu dapat mengumpulkan 5 bunga istimewa, aku akan memberikan hadiah.'")
+    
+    bunga_dikumpulkan = 0
+    bunga_nama = ["Bunga Matahari Emas", "Bunga Mawar Merah Darah", 
+                  "Bunga Teratai Putih", "Bunga Lavender Ungu", "Bunga Lotus Sakral"]
+    
+    for i, bunga in enumerate(bunga_nama, 1):
+        print(f"\n🌸 Bunga #{i}: {bunga}")
+        print("Lokasi bunga ini sangat tersembunyi. Mau mencarinya?")
+        
+        pilihan = input("Lanjut? (y/n): ").lower()
+        
+        if pilihan == 'y':
+            # Kemungkinan tinggi untuk mudah
+            if random.random() > 0.2:
+                print(f"✓ Kamu menemukan {bunga}!")
+                pemain.ambil_item(bunga)
+                bunga_dikumpulkan += 1
+            else:
+                print(f"✗ Bunga itu terlalu indah, kamu hanya bisa menghafal lokasinya...")
+        
+        if i == 5 and bunga_dikumpulkan == 5:
+            print("\n" + "="*50)
+            print("🎁 SELAMAT! Kamu mengumpulkan semua 5 bunga!")
+            print("="*50)
+            print("Peri Bunga memberikan Mahkota Bunga Kekal! 👑")
+            pemain.ambil_item("Mahkota Bunga Kekal")
+            pemain.misteri_terpecahkan += 1
+            pemain.hp += 30
+            print(f"HP Anda pulih sepenuhnya! (+30, sekarang: {pemain.hp})")
+            break
+        elif i == 5:
+            print(f"\nKamu hanya dapat mengumpulkan {bunga_dikumpulkan}/5 bunga.")
+            print("Peri memberikan hadiah kecil sebagai tanda kasih...")
+            pemain.ambil_item("Kristal Keindahan Taman")
+            pemain.hp += 20
+    
+    input("\nTekan ENTER untuk kembali ke gerbang...")
+    pemain.lokasi_sekarang = "gerbang"
+
+def perpustakaan_kuno(pemain):
+    """
+    Perpustakaan Kuno - Lokasi SEDANG dengan tantangan pengetahuan
+    """
+    print("\n📚 PERPUSTAKAAN KUNO (SEDANG) 📚")
+    print("─" * 50)
+    print("Kamu memasuki perpustakaan raksasa dengan buku-buku berusia berabad-abad.")
+    print("Debu membang di udara, cahaya matahari menebus celah-celah jendela kuno.")
+    print("Seorang Pustakawan Tua mendekatimu dari balik rak buku yang tinggi...")
+    
+    print("\n'Selamat datang di Perpustakaan Kuno!'")
+    print("'Di sini tersimpan pengetahuan dunia. Tapi hanya yang cerdas yang bisa keluar.'")
+    print("'Jawab 3 pertanyaan trivia, dan hadiah menanti!'")
+    
+    benar_terjawab = 0
+    
+    pertanyaan = [
+        {
+            "q": "Berapa jumlah benua di Bumi?",
+            "pilihan": ["5", "6", "7", "8"],
+            "jawab": "1"  # Index 1 = 6
+        },
+        {
+            "q": "Siapa penulis 'Laskar Pelangi'?",
+            "pilihan": ["Pramoedya Ananta Toer", "Andrea Hirata", "Sutan Syamir", "Habiburrahman El Shirazy"],
+            "jawab": "1"  # Index 1 = Andrea Hirata
+        },
+        {
+            "q": "Manakah planet terbesar di tata surya kita?",
+            "pilihan": ["Saturnus", "Neptunus", "Jupiter", "Uranus"],
+            "jawab": "2"  # Index 2 = Jupiter
+        }
+    ]
+    
+    for i, item in enumerate(pertanyaan, 1):
+        print(f"\n❓ PERTANYAAN {i}/3")
+        print(f"{item['q']}")
+        for j, pilihan in enumerate(item['pilihan']):
+            print(f"{j}. {pilihan}")
+        
+        jawaban = input("\nJawaban Anda (0-3): ")
+        
+        if jawaban == item['jawab']:
+            print("✓ BENAR! Buku berkobar dengan cahaya emas.")
+            benar_terjawab += 1
+        else:
+            print(f"✗ SALAH! Jawaban yang benar adalah: {item['pilihan'][int(item['jawab'])]}")
+            pemain.hp -= 10
+            print(f"HP berkurang 10 (sekarang: {pemain.hp})")
+            if pemain.hp <= 0:
+                game_over_kalah(pemain)
+                return
+    
+    print("\n" + "="*50)
+    print(f"HASIL: {benar_terjawab}/3 jawaban benar!")
+    print("="*50)
+    
+    if benar_terjawab >= 2:
+        print("Pustakawan memberikan Grimoire Pengetahuan Kuno!")
+        pemain.ambil_item("Grimoire Pengetahuan Kuno")
+        pemain.misteri_terpecahkan += 1
+        pemain.hp += 25
+        print(f"HP Anda pulih! (+25, sekarang: {pemain.hp})")
+    else:
+        print("Pustakawan memberikan buku panduan sederhana...")
+        pemain.ambil_item("Buku Panduan Sederhana")
+    
+    input("\nTekan ENTER untuk kembali ke gerbang...")
+    pemain.lokasi_sekarang = "gerbang"
+
+def ruang_harta_karun_final(pemain):
+    """
+    Ruang Harta Karun Final - Ending game untuk 6 misteri terpecahkan
+    """
+    print("\n" + "="*60)
+    print("💰 RUANG HARTA KARUN TERAKHIR - ENDING 💰")
+    print("="*60)
+    
+    print("\nPintu dengan hieroglif membuka dengan suara gemuruh yang dahsyat...")
+    print("Cahaya emas murni memenuhi seluruh ruangan...")
+    print("Aura mistis mengelilingi semua objek berharga...")
+    
+    print("\n" + "╔" + "="*58 + "╗")
+    print("║" + "🏆 SELAMAT! KAMU TELAH MEMENANGKAN PETUALANGAN! 🏆".center(60) + "║")
+    print("╚" + "="*58 + "╝")
+    
+    print(f"\n{pemain.nama}, kamu adalah PEMENANG SEJATI! 🎉")
+    print(f"Tingkat Kesulitan: {pemain.tingkat_kesulitan.upper()}")
+    print(f"HP Akhir: {pemain.hp}/{pemain.max_hp}")
+    print(f"Misteri Terpecahkan: {pemain.misteri_terpecahkan}/6")
+    
+    print("\n" + "─"*60)
+    print("HARTA KARUN YANG DIKUMPULKAN:")
+    print("─"*60)
+    
+    if pemain.inventaris:
+        for i, item in enumerate(pemain.inventaris, 1):
+            print(f"{i}. ✓ {item}")
+    
+    print("\n" + "─"*60)
+    print("PESAN DARI PENJAGA TAMAN:")
+    print("─"*60)
+    
+    if pemain.tingkat_kesulitan == "sulit":
+        print("\n⚔️ 'Kamu yang berani menghadapi segala tantangan!")
+        print("Keberanianmu mencerminkan jiwa seorang prajurit sejati.'")
+    elif pemain.tingkat_kesulitan == "mudah":
+        print("\n😊 'Perjalananmu indah dan penuh pembelajaran.")
+        print("Setiap perjalanan memulai dari langkah yang nyaman.'")
+    else:
+        print("\n⚖️ 'Kamu telah melewati ujian dengan sempurna!")
+        print("Keseimbangan antara keberanian dan kebijaksanaan adalah kunci.'")
+    
+    print("\nSemua monster dan jebakan hilang dalam cahaya emas...")
+    print("Taman Misteri kembali ke kebalikan aslunya...")
+    print("Kamu keluar dari taman dengan harta karun dan pengalaman berharga!")
+    
+    print("\n" + "="*60)
+    print("🎮 TERIMA KASIH TELAH BERMAIN 'MISTERI TAMAN' 🎮")
+    print("="*60)
+    print("Sampai jumpa di petualangan berikutnya! 👋\n")
+
 def game_utama():
     # Inisialisasi sistem login
     login_system = SistemLogin()
@@ -755,7 +1016,26 @@ def game_utama():
     print(f"\nHalo {username_pemain}! Selamat datang di petualangan!")
     nama = input("Siapa nama karakter Anda? ")
     
-    pemain = Pemain(nama)
+    # Menu pemilihan tingkat kesulitan
+    print("\n" + "="*50)
+    print("⚔️ PILIH TINGKAT KESULITAN ⚔️")
+    print("="*50)
+    print("1. 😊 MUDAH - HP: 150 (Cocok untuk pemula)")
+    print("2. ⚖️ NORMAL - HP: 100 (Standar, seimbang)")
+    print("3. 😈 SULIT - HP: 70 (Untuk yang cari tantangan)")
+    
+    tingkat_input = input("\nPilihan Anda (1-3): ")
+    
+    if tingkat_input == "1":
+        tingkat_kesulitan = "mudah"
+    elif tingkat_input == "3":
+        tingkat_kesulitan = "sulit"
+    else:
+        tingkat_kesulitan = "normal"
+    
+    print(f"\nKamu memilih mode: {tingkat_kesulitan.upper()}! 🎮")
+    
+    pemain = Pemain(nama, tingkat_kesulitan)
     cerita_pembukaan(pemain)
     
     pemain.lokasi_sekarang = "gerbang"
@@ -764,8 +1044,11 @@ def game_utama():
         if lokasi_gerbang(pemain) == False:
             break
         
-        if pemain.misteri_terpecahkan >= 3 and pemain.lokasi_sekarang == "gerbang":
-            print("\n✨ Kamu merasa kekuatan misteri taman memintamu kembali ke kuil... ✨")
+        if pemain.misteri_terpecahkan >= 6 and pemain.lokasi_sekarang == "gerbang":
+            print("\n✨ Kamu merasa semua misteri taman telah terpecahkan! ✨")
+            print("Gerbang utama bersinar dengan cahaya putih...")
+            ruang_harta_karun_final(pemain)
+            break
     
 if __name__ == "__main__":
     game_utama()
