@@ -70,13 +70,25 @@ class SistemLogin:
                 print("❌ Pilihan tidak valid!")
 
 class Pemain:
-    def __init__(self, nama):
+    def __init__(self, nama, tingkat_kesulitan="normal"):
         self.nama = nama
-        self.hp = 100
-        self.max_hp = 100
+        self.tingkat_kesulitan = tingkat_kesulitan
+        
+        # HP berdasarkan tingkat kesulitan
+        if tingkat_kesulitan == "mudah":
+            self.hp = 150
+            self.max_hp = 150
+        elif tingkat_kesulitan == "sulit":
+            self.hp = 70
+            self.max_hp = 70
+        else:  # normal
+            self.hp = 100
+            self.max_hp = 100
+            
         self.inventaris = []
         self.misteri_terpecahkan = 0
         self.lokasi_sekarang = "gerbang"
+        self.lokasi_dikunjungi = set()
         
     def ambil_item(self, item):
         self.inventaris.append(item)
@@ -91,8 +103,9 @@ class Pemain:
     def lihat_status(self):
         print(f"\n═══ STATUS PEMAIN ═══")
         print(f"Nama: {self.nama}")
+        print(f"Tingkat Kesulitan: {self.tingkat_kesulitan.upper()} ⚔️")
         print(f"HP: {self.hp}/{self.max_hp} ❤️")
-        print(f"Misteri Terpecahkan: {self.misteri_terpecahkan}/3 🔍")
+        print(f"Misteri Terpecahkan: {self.misteri_terpecahkan}/6 🔍")
         print(f"Inventaris: {', '.join(self.inventaris) if self.inventaris else 'Kosong'}")
         print(f"Lokasi: {self.lokasi_sekarang}\n")
 
@@ -112,19 +125,23 @@ def cerita_pembukaan(pemain):
 
 def lokasi_gerbang(pemain):
     print("\n🏰 GERBANG TAMAN 🏰")
-    print("─" * 40)
+    print("─" * 50)
     print("Kamu berdiri di depan gerbang besar berusia ratusan tahun.")
     print("Patung singa kuno menjaga kedua sisinya.")
+    print(f"Status: Level {pemain.tingkat_kesulitan.upper()} | HP: {pemain.hp}/{pemain.max_hp}")
     print("\nKe mana kamu ingin pergi?")
-    print("1. Ke Hutan Gelap (timur)")
-    print("2. Ke Danau Misterius (barat)")
-    print("3. Ke Kuil Kuno (utara)")
-    print("4. Ke Lembah Coding (selatan)")
-    print("5. Ke Gunung Bug (barat daya)")
-    print("6. Lihat Status")
-    print("7. Keluar Game")
+    print("1. 🌲 Hutan Gelap (timur) - Tingkat: Normal")
+    print("2. 💧 Danau Misterius (barat) - Tingkat: Normal")
+    print("3. ⛩️ Kuil Kuno (utara) - Tingkat: Sulit")
+    print("4. 💻 Lembah Coding (selatan) - Tingkat: Sedang")
+    print("5. 🐞 Gunung Bug (barat daya) - Tingkat: Sulit")
+    print("6. 🏔️ Gua Naga Purba (timur laut) - Tingkat: Sangat Sulit")
+    print("7. 🌺 Taman Bunga Pesona (tenggara) - Tingkat: Mudah")
+    print("8. 📚 Perpustakaan Kuno (tengah) - Tingkat: Sedang")
+    print("9. Lihat Status")
+    print("10. Keluar Game")
     
-    pilihan = input("\nPilihan (1-7): ")
+    pilihan = input("\nPilihan (1-10): ")
     
     # Menggunakan if-else untuk mengarahkan ke jalur yang dipilih
     if pilihan == "1":
@@ -138,9 +155,15 @@ def lokasi_gerbang(pemain):
     elif pilihan == "5":
         gunung_bug(pemain)
     elif pilihan == "6":
+        gua_naga_purba(pemain)
+    elif pilihan == "7":
+        taman_bunga_pesona(pemain)
+    elif pilihan == "8":
+        perpustakaan_kuno(pemain)
+    elif pilihan == "9":
         pemain.lihat_status()
         lokasi_gerbang(pemain)
-    elif pilihan == "7":
+    elif pilihan == "10":
         print("\nTerima kasih telah bermain! 👋")
         return False
     else:
