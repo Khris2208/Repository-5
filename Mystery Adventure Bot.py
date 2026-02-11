@@ -4,6 +4,70 @@ import json
 import os
 from datetime import datetime
 
+class Senjata:
+    """Class untuk merepresentasikan senjata dalam game"""
+    def __init__(self, nama, damage_min, damage_max, mana_cost, level_diperlukan, deskripsi):
+        self.nama = nama
+        self.damage_min = damage_min
+        self.damage_max = damage_max
+        self.mana_cost = mana_cost
+        self.level_diperlukan = level_diperlukan  # Berapa kristal yang diperlukan
+        self.deskripsi = deskripsi
+        self.aktif = False
+    
+    def hitung_damage(self):
+        """Hitung damage acak antara min dan max"""
+        return random.randint(self.damage_min, self.damage_max)
+    
+    def __str__(self):
+        return f"{self.nama} (Dmg: {self.damage_min}-{self.damage_max}, Mana: {self.mana_cost}, Level: {self.level_diperlukan})"
+
+# Database senjata yang dapat ditemukan
+DATABASE_SENJATA = {
+    "pedang_kayu": Senjata(
+        "Pedang Kayu",
+        damage_min=8, damage_max=12,
+        mana_cost=5,
+        level_diperlukan=0,
+        deskripsi="Senjata pemula, mudah digunakan tapi kurang kuat"
+    ),
+    "pedang_besi": Senjata(
+        "Pedang Besi",
+        damage_min=15, damage_max=22,
+        mana_cost=10,
+        level_diperlukan=1,
+        deskripsi="Senjata standar, solid dan handal dalam pertarungan"
+    ),
+    "pedang_ajaib": Senjata(
+        "Pedang Ajaib",
+        damage_min=20, damage_max=30,
+        mana_cost=15,
+        level_diperlukan=2,
+        deskripsi="Senjata berenergi magis, meningkatkan kekuatan serangan"
+    ),
+    "pedang_cahaya": Senjata(
+        "Pedang Cahaya",
+        damage_min=25, damage_max=35,
+        mana_cost=20,
+        level_diperlukan=3,
+        deskripsi="Senjata yang memancarkan cahaya putih, sangat ampuh"
+    ),
+    "pedang_petir": Senjata(
+        "Pedang Petir",
+        damage_min=28, damage_max=38,
+        mana_cost=25,
+        level_diperlukan=4,
+        deskripsi="Senjata beralirankan energi petir, serangan mematikan"
+    ),
+    "pedang_naga": Senjata(
+        "Pedang Naga",
+        damage_min=35, damage_max=50,
+        mana_cost=30,
+        level_diperlukan=5,
+        deskripsi="Senjata paling kuat, dipercayakan oleh para naga kuno"
+    )
+}
+
 class SistemLogin:
     """Sistem Login dan Registrasi untuk game dengan penyimpanan file"""
     def __init__(self):
@@ -201,6 +265,11 @@ class Pemain:
         self.pertempuran_menang = 0
         self.kesalahan_total = 0
         
+        # Sistem Senjata
+        self.senjata_pemilik = {}  # {kode_senjata: Senjata object}
+        self.senjata_aktif = None  # Senjata yang sedang digunakan
+        self.senjata_level_tertinggi = 0  # Level senjata tertinggi yang ditemukan
+        
         # Status effect
         self.keracunan = False
         self.terkunci = False
@@ -227,7 +296,42 @@ class Pemain:
     def regenerasi_mana(self, jumlah=20):
         """Regenerasi mana setiap turn"""
         self.mana = min(self.mana + jumlah, self.max_mana)
-
+    
+    def tambah_senjata(self, kode_senjata, senjata_obj):
+        """Tambah senjata ke inventaris pemain"""
+        self.senjata_pemilik[kode_senjata] = senjata_obj
+        
+        # Update level senjata tertinggi
+        if senjata_obj.level_diperlukan > self.senjata_level_tertinggi:
+            self.senjata_level_tertinggi = senjata_obj.level_diperlukan
+        
+        # Otomatis gunakan senjata pertama atau yang lebih baik
+        if self.senjata_aktif is None or senjata_obj.level_diperlukan > self.senjata_aktif.level_diperlukan:
+            self.gunakan_senjata(kode_senjata)
+            return True
+        return False
+    
+    def gunakan_senjata(self, kode_senjata):
+        """Gunakan senjata tertentu"""
+        if kode_senjata in self.senjata_pemilik:
+            self.senjata_aktif = self.senjata_pemilik[kode_senjata]
+            return True
+        return False
+    
+    def lihat_senjata(self):
+        """Tampilkan senjata yang dimiliki"""
+        print("\n⚔️ ══════ SENJATA YANG DIMILIKI ══════")
+        if not self.senjata_pemilik:
+            print("Kamu belum memiliki senjata apapun!")
+            return
+        
+        for i, (kode, senjata) in enumerate(self.senjata_pemilik.items(), 1):
+            status = " (AKTIF)" if self.senjata_aktif == senjata else ""
+            print(f"{i}. {senjata.nama}{status}")
+            print(f"   Damage: {senjata.damage_min}-{senjata.damage_max} | Mana: {senjata.mana_cost} | Level: {senjata.level_diperlukan}")
+            print(f"   {senjata.deskripsi}")
+        
+        print("\n" + "─"*40)
     
     def lihat_status(self):
         print(f"\n═══ STATUS PEMAIN ═══")
@@ -306,10 +410,12 @@ def lokasi_gerbang(pemain):
     print("\n🔥 SANGAT SULIT")
     print("8. 🏔️ Gua Naga Purba (timur laut)")
     
-    print("\n9. Lihat Status")
-    print("10. Keluar Game")
+    print("\n⚔️ FASILITAS SPESIAL")
+    print("9. 🗡️ Ruang Senjata (Carilah senjata berdasarkan kristal)")
+    print("10. 📊 Lihat Status & Senjata")
+    print("11. Keluar Game")
     
-    pilihan = input("\nPilihan (1-10): ")
+    pilihan = input("\nPilihan (1-11): ")
     
     # Menggunakan if-else untuk mengarahkan ke jalur yang dipilih (berdasarkan urutan level)
     if pilihan == "1":
@@ -1597,6 +1703,27 @@ Taman akan dipulihkan menjadi tempat indah yang pernah kami ciptakan.
     
     input("Tekan ENTER untuk keluar dari game...")
 
+def simpan_statistik_game(pemain, username, login_system, status_akhir):
+    """
+    Simpan statistik akhir game ke histori pengguna
+    status_akhir: 'menang' atau 'kalah'
+    """
+    if username in login_system.histori_login:
+        stat_game = {
+            "tanggal": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": status_akhir,
+            "kesulitan": pemain.tingkat_kesulitan,
+            "hp_akhir": pemain.hp,
+            "hp_max": pemain.max_hp,
+            "kristal": pemain.misteri_terpecahkan,
+            "total_item": len(pemain.inventaris),
+            "pertempuran_menang": pemain.pertempuran_menang,
+            "durasi_game": str(datetime.now() - pemain.waktu_mulai)
+        }
+        login_system.histori_login[username]["statistik_game"].append(stat_game)
+        login_system.simpan_histori()
+        print(f"\n[💾] Statistik game berhasil disimpan!")
+
 def game_utama():
     # Inisialisasi sistem login
     login_system = SistemLogin()
@@ -1620,7 +1747,7 @@ def game_utama():
     print("="*50)
     print("1. 😊 MUDAH - HP: 150 (Cocok untuk pemula)")
     print("2. ⚖️ NORMAL - HP: 100 (Standar, seimbang)")
-    print("3. 😈 SULIT - HP: 70 (Untuk yang cari tantangan)")
+    print("3. 😈 SULIT - HP: 60 (Untuk yang cari tantangan)")
     
     tingkat_input = input("\nPilihan Anda (1-3): ")
     
@@ -1638,15 +1765,27 @@ def game_utama():
     
     pemain.lokasi_sekarang = "gerbang"
     
-    while pemain.hp > 0:
-        if lokasi_gerbang(pemain) == False:
-            break
+    try:
+        while pemain.hp > 0:
+            if lokasi_gerbang(pemain) == False:
+                simpan_statistik_game(pemain, username_pemain, login_system, "kalah")
+                break
+            
+            if pemain.misteri_terpecahkan >= 6 and pemain.lokasi_sekarang == "gerbang":
+                print("\n✨ Kamu merasa semua misteri taman telah terpecahkan! ✨")
+                print("Gerbang utama bersinar dengan cahaya putih...")
+                ruang_harta_karun_final(pemain)
+                simpan_statistik_game(pemain, username_pemain, login_system, "menang")
+                break
         
-        if pemain.misteri_terpecahkan >= 6 and pemain.lokasi_sekarang == "gerbang":
-            print("\n✨ Kamu merasa semua misteri taman telah terpecahkan! ✨")
-            print("Gerbang utama bersinar dengan cahaya putih...")
-            ruang_harta_karun_final(pemain)
-            break
+        # Jika pemain kehabisan HP, simpan sebagai kalah
+        if pemain.hp <= 0:
+            simpan_statistik_game(pemain, username_pemain, login_system, "kalah")
     
+    except KeyboardInterrupt:
+        print("\n\n[⚠️] Game dihentikan oleh pemain.")
+        simpan_statistik_game(pemain, username_pemain, login_system, "dihentikan")
+
+
 if __name__ == "__main__":
     game_utama()
