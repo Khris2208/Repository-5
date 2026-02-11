@@ -270,6 +270,9 @@ class Pemain:
         self.senjata_aktif = None  # Senjata yang sedang digunakan
         self.senjata_level_tertinggi = 0  # Level senjata tertinggi yang ditemukan
         
+        # Penjaga Gerbang yang sudah dikalahkan
+        self.penjaga_dikalahkan = set()  # {nama_penjaga}
+        
         # Status effect
         self.keracunan = False
         self.terkunci = False
@@ -435,9 +438,12 @@ def lokasi_gerbang(pemain):
     elif pilihan == "8":
         gua_naga_purba(pemain)
     elif pilihan == "9":
-        pemain.lihat_status()
-        lokasi_gerbang(pemain)
+        ruang_senjata(pemain)
     elif pilihan == "10":
+        pemain.lihat_status()
+        pemain.lihat_senjata()
+        lokasi_gerbang(pemain)
+    elif pilihan == "11":
         print("\nTerima kasih telah bermain! 👋")
         return False
     else:
@@ -446,7 +452,92 @@ def lokasi_gerbang(pemain):
     
     return True
 
-def semak_hutan_gelap(pemain):
+def ruang_senjata(pemain):
+    """
+    Ruang Senjata - Lokasi khusus untuk mencari senjata
+    Senjata dapat ditemukan berdasarkan jumlah kristal yang dikumpulkan
+    """
+    print("\n" + "="*70)
+    print("🗡️ RUANG SENJATA KUNO 🗡️")
+    print("="*70)
+    print("Ruangan gelap berisi rak-rak berisi senjata berusia berabad-abad...")
+    print("Cahaya mistis bersinar dari setiap sudut.")
+    print("─"*70)
+    
+    print(f"\n📊 STATISTIK KRISTAL MU: {pemain.misteri_terpecahkan}/7 Kristal")
+    print(f"⚔️ Senjata Pemilik: {len(pemain.senjata_pemilik)}")
+    if pemain.senjata_aktif:
+        print(f"Senjata Aktif: {pemain.senjata_aktif.nama}")
+    else:
+        print("Belum ada senjata aktif")
+    
+    # Tentukan senjata mana yang bisa diakses berdasarkan kristal
+    senjata_tersedia = []
+    
+    if pemain.misteri_terpecahkan >= 0:
+        senjata_tersedia.append(("pedang_kayu", DATABASE_SENJATA["pedang_kayu"], "Tersedia tanpa kristal"))
+    if pemain.misteri_terpecahkan >= 1:
+        senjata_tersedia.append(("pedang_besi", DATABASE_SENJATA["pedang_besi"], "Memerlukan 1 Kristal"))
+    if pemain.misteri_terpecahkan >= 2:
+        senjata_tersedia.append(("pedang_ajaib", DATABASE_SENJATA["pedang_ajaib"], "Memerlukan 2 Kristal"))
+    if pemain.misteri_terpecahkan >= 3:
+        senjata_tersedia.append(("pedang_cahaya", DATABASE_SENJATA["pedang_cahaya"], "Memerlukan 3 Kristal"))
+    if pemain.misteri_terpecahkan >= 4:
+        senjata_tersedia.append(("pedang_petir", DATABASE_SENJATA["pedang_petir"], "Memerlukan 4 Kristal"))
+    if pemain.misteri_terpecahkan >= 5:
+        senjata_tersedia.append(("pedang_naga", DATABASE_SENJATA["pedang_naga"], "Memerlukan 5 Kristal - SENJATA LEGENDARIS!"))
+    
+    print("="*70)
+    print("⚔️ SENJATA YANG DAPAT DIAKSES:")
+    print("="*70)
+    
+    for i, (kode, senjata, status) in enumerate(senjata_tersedia, 1):
+        print(f"\n{i}. {senjata.nama}")
+        print(f"   • Damage: {senjata.damage_min}-{senjata.damage_max}")
+        print(f"   • Mana Cost: {senjata.mana_cost}")
+        print(f"   • Status: {status}")
+        print(f"   • {senjata.deskripsi}")
+    
+    if len(senjata_tersedia) == 0:
+        print("❌ Tidak ada senjata yang bisa diakses.")
+        print("Carilah kristal lebih banyak untuk membuka senjata!")
+    else:
+        print("\n" + "="*70)
+        pilihan = input(f"\nPilih senjata (1-{len(senjata_tersedia)}) atau 0 untuk kembali: ")
+        
+        try:
+            pilihan_int = int(pilihan)
+            if pilihan_int == 0:
+                lokasi_gerbang(pemain)
+                return
+            elif 1 <= pilihan_int <= len(senjata_tersedia):
+                kode_senjata, senjata_obj, _ = senjata_tersedia[pilihan_int - 1]
+                
+                # Cek apakah sudah dimiliki
+                if kode_senjata in pemain.senjata_pemilik:
+                    print(f"\nℹ️ Kamu sudah memiliki {senjata_obj.nama}!")
+                    print("Gunakan opsi lain untuk berganti senjata.")
+                else:
+                    # Dapatkan senjata
+                    print(f"\n✨ Kamu menemukan {senjata_obj.nama}!")
+                    print(f"{senjata_obj.deskripsi}")
+                    print("Senjata ini bersinar dengan energi magis...")
+                    time.sleep(1)
+                    
+                    # Tambah senjata dan gunakan
+                    pemain.tambah_senjata(kode_senjata, senjata_obj)
+                    print(f"⚔️ {senjata_obj.nama} sekarang menjadi senjata aktif mu!")
+                    print(f"Damage: {senjata_obj.damage_min}-{senjata_obj.damage_max}")
+                
+                input("\nTekan ENTER untuk kembali ke gerbang...")
+                lokasi_gerbang(pemain)
+            else:
+                print("❌ Pilihan tidak valid!")
+                ruang_senjata(pemain)
+        except:
+            print("❌ Input tidak valid!")
+            ruang_senjata(pemain)
+\n\ndef semak_hutan_gelap(pemain):
     print("\n" + "="*60)
     print("🌲 HUTAN GELAP - LOKASI NORMAL 🌲")
     print("="*60)
@@ -522,22 +613,39 @@ def bertemu_monster_hutan(pemain):
             pilihan = input("\nPilahan aksi (1-5): ")
             
             if pilihan == "1":  # Serangan biasa
-                damage = random.randint(15, 20)
+                # Gunakan bonus damage dari senjata jika ada
+                if pemain.senjata_aktif:
+                    damage = pemain.senjata_aktif.hitung_damage()
+                    desc_senjata = f" dengan {pemain.senjata_aktif.nama}"
+                else:
+                    damage = random.randint(15, 20)
+                    desc_senjata = ""
+                
                 boss_hp -= damage
-                print(f"⚔️  Kamu menyerang! Damage: {damage}")
+                print(f"⚔️  Kamu menyerang{desc_senjata}! Damage: {damage}")
                 pemain.regenerasi_mana(5)
                 
             elif pilihan == "2":  # Serangan khusus
-                if pemain.gunakan_mana(30):
+                # Serangan khusus menggunakan mana lebih banyak untuk senjata
+                mana_cost = 30
+                if pemain.senjata_aktif and pemain.senjata_aktif.mana_cost > 0:
+                    mana_cost = pemain.senjata_aktif.mana_cost + 20
+                
+                if pemain.gunakan_mana(mana_cost):
                     if random.random() > 0.3:  # 70% hit rate
-                        damage = int(random.randint(30, 40) * damage_multiplier)
+                        base_damage = random.randint(30, 40)
+                        if pemain.senjata_aktif:
+                            # Senjata memberikan bonus damage
+                            base_damage += pemain.senjata_aktif.damage_max // 2
+                        damage = int(base_damage * damage_multiplier)
                         boss_hp -= damage
-                        print(f"🔥 COMBO SERANGAN! Damage KRITIS: {damage}!")
+                        senjata_desc = f" {pemain.senjata_aktif.nama}" if pemain.senjata_aktif else ""
+                        print(f"🔥 COMBO SERANGAN{senjata_desc}! Damage KRITIS: {damage}!")
                     else:
                         print("🔥 Serangan khususmu meleset!")
                     pemain.regenerasi_mana(10)
                 else:
-                    print("❌ Mana tidak cukup! Mana minimum 30 dibutuhkan.")
+                    print(f"❌ Mana tidak cukup! Mana minimum {mana_cost} dibutuhkan.")
                     continue
                     
             elif pilihan == "3":  # Pertahanan
@@ -945,6 +1053,155 @@ def ruang_harta_karun(pemain):
     print("TERIMA KASIH TELAH BERMAIN!")
     print("="*50)
 
+def pertarungan_penjaga_gerbang(pemain, nama_penjaga, deskripsi_penjaga, hp_penjaga, damage_penjaga, level_lokasi):
+    """
+    Sistem pertarungan dengan penjaga gerbang untuk setiap level.
+    Penjaga harus dikalahkan untuk masuk ke lokasi.
+    
+    Args:
+        pemain: Object Pemain
+        nama_penjaga: Nama penjaga gerbang
+        deskripsi_penjaga: Deskripsi penampilan penjaga
+        hp_penjaga: HP penjaga
+        damage_penjaga: Damage per attack penjaga
+        level_lokasi: Tingkat kesulitan lokasi ('mudah', 'normal', 'sulit' dst)
+    
+    Returns:
+        bool: True jika pemain menang, False jika kalah
+    """
+    
+    # Jika sudah dikalahkan, langsung izinkan masuk
+    if nama_penjaga in pemain.penjaga_dikalahkan:
+        print(f"\n✓ Penjaga {nama_penjaga} mengenali kamu dan membiarkan laluan.")
+        return True
+    
+    print("\n" + "="*60)
+    print(f"⚔️  PENJAGA GERBANG: {nama_penjaga.upper()} ⚔️")
+    print("="*60)
+    print(f"Deskripsi: {deskripsi_penjaga}")
+    print(f"Level: {level_lokasi}")
+    time.sleep(2)
+    
+    # Stats penjaga
+    boss_hp = hp_penjaga
+    boss_max_hp = hp_penjaga
+    pemain_damage_multiplier = 1.3 if pemain.tingkat_kesulitan == "sulit" else 1.0
+    penjaga_damage_multiplier = 1.4 if pemain.tingkat_kesulitan == "sulit" else 1.0
+    
+    pertarungan_berlangsung = True
+    giliran = 0
+    
+    print(f"\n{nama_penjaga} berbicara: 'Kamu tidak bisa masuk tanpa izin!'")
+    print("Dia siap untuk bertarung...\n")
+    time.sleep(1)
+    
+    print("┌─ OPSI PERTARUNGAN ─┐")
+    print("1. ⚔️  Serangan Biasa")
+    print("2. 🔥 Serangan Kuat (Mana)")
+    print("3. 🛡️  Pertahanan")
+    print("4. 💚 Penyembuhan")
+    print("5. 🏃 Mundur")
+    print("└────────────────────┘\n")
+    
+    while pertarungan_berlangsung:
+        print(f"\n┌─ STATUS ──────────────┐")
+        print(f"│ Pemain HP:  {pemain.hp}/{pemain.max_hp}")
+        print(f"│ Mana:       {pemain.mana}/{pemain.max_mana}")
+        print(f"│ {nama_penjaga}: {boss_hp}/{boss_max_hp}")
+        print(f"└────────────────────────┘")
+        
+        pilihan = input("\nPilihan aksi (1-5): ").strip()
+        
+        if pilihan == "1":  # Serangan biasa
+            damage = random.randint(10, 18)
+            damage = int(damage * pemain_damage_multiplier)
+            boss_hp -= damage
+            print(f"⚔️  Kamu menyerang! Damage: {damage}")
+            
+        elif pilihan == "2":  # Serangan kuat
+            if pemain.gunakan_mana(25):
+                if random.random() > 0.25:  # 75% hit
+                    damage = random.randint(25, 35)
+                    damage = int(damage * pemain_damage_multiplier)
+                    boss_hp -= damage
+                    print(f"🔥 Serangan kuat! Damage: {damage}!")
+                else:
+                    print("🔥 Serangan meleset!")
+            else:
+                print("❌ Mana tidak cukup (butuh 25)!")
+                continue
+                
+        elif pilihan == "3":  # Pertahanan
+            if pemain.gunakan_mana(15):
+                pemain.boost_defense = 1
+                print("🛡️  Kamu dalam posisi pertahanan! Damage berkurang 50%")
+            else:
+                print("❌ Mana tidak cukup (butuh 15)!")
+                continue
+                
+        elif pilihan == "4":  # Penyembuhan
+            if pemain.gunakan_mana(30):
+                heal = 20
+                pemain.hp = min(pemain.hp + heal, pemain.max_hp)
+                print(f"💚 Kamu menyembuhkan diri! HP +{heal}")
+            else:
+                print("❌ Mana tidak cukup (butuh 30)!")
+                continue
+                
+        elif pilihan == "5":  # Mundur
+            if random.random() > 0.5:  # 50% success
+                print(f"✓ Kamu berhasil mundur dari {nama_penjaga}.")
+                print("(Kamu bisa coba lagi nanti)")
+                return False
+            else:
+                print(f"✗ {nama_penjaga} memblokir jalanmu!")
+                
+        else:
+            print("❌ Pilihan tidak valid!")
+            continue
+        
+        # Regenerasi mana
+        pemain.regenerasi_mana(5)
+        
+        # Serangan penjaga
+        if boss_hp > 0:
+            time.sleep(1)
+            penjaga_damage = random.randint(12, damage_penjaga)
+            
+            if pemain.boost_defense > 0:
+                penjaga_damage = int(penjaga_damage * 0.5)
+                print(f"😤 {nama_penjaga} menyerang! Damage: {penjaga_damage} (pertahanan aktif)")
+                pemain.boost_defense = 0
+            else:
+                print(f"😤 {nama_penjaga} menyerang! Damage: {penjaga_damage}")
+            
+            penjaga_damage = int(penjaga_damage * penjaga_damage_multiplier)
+            pemain.hp -= penjaga_damage
+            
+            if pemain.hp <= 0:
+                print(f"\n💀 Kamu kalah dari {nama_penjaga}!")
+                print("Penjaga tidak membiarkanmu masuk...")
+                return False
+        
+        # Cek kemenangan
+        if boss_hp <= 0:
+            print("\n" + "="*60)
+            print(f"⭐ KEMENANGAN! ⭐")
+            print(f"Kamu berhasil mengalahkan {nama_penjaga}!")
+            print("="*60)
+            print(f"{nama_penjaga} kalah dan membiarkanmu masuk ke lokasi ini.")
+            pemain.penjaga_dikalahkan.add(nama_penjaga)
+            pemain.pertempuran_menang += 1
+            
+            # Bonus HP kecil setelah menang
+            bonus_hp = 15
+            pemain.hp = min(pemain.hp + bonus_hp, pemain.max_hp)
+            print(f"Bonus HP +{bonus_hp} (sekarang: {pemain.hp})")
+            pertarungan_berlangsung = False
+            return True
+    
+    return False
+
 def game_over_kalah(pemain):
     print("\n" + "="*50)
     print("💀 GAME OVER 💀")
@@ -1261,21 +1518,35 @@ Kamu telah sampai ke sini... berarti kamu layak mendapatkan kesempatan.'
         pilihan = input("\nPilihan aksi (1-6): ")
         
         if pilihan == "1":  # Serangan biasa
-            damage = random.randint(15, 25)
+            # Gunakan bonus damage dari senjata jika ada
+            if pemain.senjata_aktif:
+                damage = pemain.senjata_aktif.hitung_damage()
+                desc_senjata = f" dengan {pemain.senjata_aktif.nama}"
+            else:
+                damage = random.randint(15, 25)
+                desc_senjata = ""
+            
             boss_hp -= damage
-            print(f"⚔️  Kamu menyerang! Damage: {damage}")
+            print(f"⚔️  Kamu menyerang{desc_senjata}! Damage: {damage}")
             
         elif pilihan == "2":  # Ledakan Magis
-            if pemain.gunakan_mana(40):
+            mana_cost = 40
+            if pemain.senjata_aktif and pemain.senjata_aktif.mana_cost > 0:
+                mana_cost = pemain.senjata_aktif.mana_cost + 25
+            
+            if pemain.gunakan_mana(mana_cost):
                 base_damage = random.randint(35, 50)
+                if pemain.senjata_aktif:
+                    base_damage += pemain.senjata_aktif.damage_max // 2
                 damage = int(base_damage * damage_multiplier)
                 if random.random() > 0.25:  # 75% hit
                     boss_hp -= damage
-                    print(f"🔥 LEDAKAN MAGIS! CRITICAL HIT - Damage: {damage}!")
+                    senjata_desc = f" {pemain.senjata_aktif.nama}" if pemain.senjata_aktif else ""
+                    print(f"🔥 LEDAKAN MAGIS{senjata_desc}! CRITICAL HIT - Damage: {damage}!")
                 else:
                     print("🔥 Ledakan magis meleset dari target yang gesit!")
             else:
-                print("❌ Mana tidak cukup (butuh 40)!")
+                print(f"❌ Mana tidak cukup (butuh {mana_cost})!")
                 continue
                 
         elif pilihan == "3":  # Pertahanan Magical
@@ -1296,16 +1567,23 @@ Kamu telah sampai ke sini... berarti kamu layak mendapatkan kesempatan.'
                 continue
                 
         elif pilihan == "5":  # Super Hit
-            if pemain.gunakan_mana(50):
+            mana_cost = 50
+            if pemain.senjata_aktif and pemain.senjata_aktif.mana_cost > 0:
+                mana_cost = pemain.senjata_aktif.mana_cost + 30
+            
+            if pemain.gunakan_mana(mana_cost):
                 if random.random() > 0.4:  # 60% hit rate
-                    damage = random.randint(60, 90)
-                    boss_hp -= damage
+                    base_damage = random.randint(60, 90)
+                    if pemain.senjata_aktif:
+                        base_damage += pemain.senjata_aktif.damage_max
+                    boss_hp -= base_damage
                     pemain_super_hits += 1
-                    print(f"⭐ SUPER HIT! Damage MASSIF: {damage}!")
+                    senjata_desc = f" {pemain.senjata_aktif.nama}" if pemain.senjata_aktif else ""
+                    print(f"⭐ SUPER HIT{senjata_desc}! Damage MASSIF: {base_damage}!")
                 else:
                     print("⭐ Super hit gagal! Naga menghindar dengan tangkas!")
             else:
-                print("❌ Mana tidak cukup (butuh 50)!")
+                print(f"❌ Mana tidak cukup (butuh {mana_cost})!")
                 continue
                 
         elif pilihan == "6":  # Mundur
