@@ -877,6 +877,7 @@ def ruang_senjata(pemain):
             print("❌ Input tidak valid!")
             ruang_senjata(pemain)
 \n\ndef semak_hutan_gelap(pemain):
+    pemain.lokasi_dikunjungi.add("semak_hutan_gelap")
     # PERTARUNGAN PENJAGA GERBANG
     penjaga_menang = pertarungan_penjaga_gerbang(
         pemain=pemain,
@@ -1118,6 +1119,7 @@ def misteri_pohon_tua(pemain):
 
 
 def danau_misterius(pemain):
+    pemain.lokasi_dikunjungi.add("danau_misterius")
     # PERTARUNGAN PENJAGA GERBANG
     penjaga_menang = pertarungan_penjaga_gerbang(
         pemain=pemain,
@@ -1232,6 +1234,7 @@ melampaui jebakan pikiran saya. Teka-teki ini telah menunggu 500 tahun...'
 
 
 def kuil_kuno(pemain):
+    pemain.lokasi_dikunjungi.add("kuil_kuno")
     # PERTARUNGAN PENJAGA GERBANG
     penjaga_menang = pertarungan_penjaga_gerbang(
         pemain=pemain,
@@ -1832,6 +1835,7 @@ kamu bisa memperbaiki kesalahan-kesalahan kritis!'
     pemain.lokasi_sekarang = "gerbang"
 
 def gua_naga_purba(pemain):
+    pemain.lokasi_dikunjungi.add("gua_naga_purba")
     # PERTARUNGAN PENJAGA GERBANG
     penjaga_menang = pertarungan_penjaga_gerbang(
         pemain=pemain,
@@ -2067,6 +2071,7 @@ def taman_bunga_pesona(pemain):
     Taman Bunga Pesona - Lokasi MUDAH - Pengenalan Cerita
     Penjaga: Peri Bunga (Penjaga Keindahan)
     """
+    pemain.lokasi_dikunjungi.add("taman_bunga_pesona")
     # PERTARUNGAN PENJAGA GERBANG
     penjaga_menang = pertarungan_penjaga_gerbang(
         pemain=pemain,
@@ -2605,6 +2610,12 @@ def game_utama():
                 print("\n✨ Kamu merasa semua misteri taman telah terpecahkan! ✨")
                 print("Gerbang utama bersinar dengan cahaya putih...")
                 ruang_harta_karun_final(pemain)
+                
+                # Hitung, tampilkan, dan simpan hadiah
+                hadiah_list = hitung_hadiah_pemain(pemain, login_system, username_pemain)
+                tampilkan_hadiah_pemain(pemain, hadiah_list)
+                simpan_hadiah_pemain(pemain, username_pemain, login_system, hadiah_list)
+                
                 simpan_statistik_game(pemain, username_pemain, login_system, "menang")
                 break
         
