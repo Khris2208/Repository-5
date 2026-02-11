@@ -1,11 +1,63 @@
 import time
 import random
+import json
+import os
+from datetime import datetime
 
 class SistemLogin:
-    """Sistem Login dan Registrasi untuk game"""
+    """Sistem Login dan Registrasi untuk game dengan penyimpanan file"""
     def __init__(self):
+        # File penyimpanan data
+        self.file_akun = "akun_pengguna.json"
+        self.file_histori = "histori_pengguna.json"
+        
         # Database pengguna dengan username dan password
         self.akun_terdaftar = {}
+        self.histori_login = {}
+        
+        # Muat data dari file jika ada
+        self.muat_akun()
+        self.muat_histori()
+    
+    def muat_akun(self):
+        """Muat data akun dari file JSON"""
+        if os.path.exists(self.file_akun):
+            try:
+                with open(self.file_akun, 'r') as f:
+                    self.akun_terdaftar = json.load(f)
+                print("[📁] Data akun berhasil dimuat dari file.")
+            except:
+                print("[⚠️] Gagal membaca file akun. Memulai database baru.")
+                self.akun_terdaftar = {}
+        else:
+            self.akun_terdaftar = {}
+    
+    def muat_histori(self):
+        """Muat data histori dari file JSON"""
+        if os.path.exists(self.file_histori):
+            try:
+                with open(self.file_histori, 'r') as f:
+                    self.histori_login = json.load(f)
+            except:
+                self.histori_login = {}
+        else:
+            self.histori_login = {}
+    
+    def simpan_akun(self):
+        """Simpan data akun ke file JSON"""
+        try:
+            with open(self.file_akun, 'w') as f:
+                json.dump(self.akun_terdaftar, f, indent=4)
+        except Exception as e:
+            print(f"[❌] Gagal menyimpan akun: {e}")
+    
+    def simpan_histori(self):
+        """Simpan data histori ke file JSON"""
+        try:
+            with open(self.file_histori, 'w') as f:
+                json.dump(self.histori_login, f, indent=4)
+        except Exception as e:
+            print(f"[❌] Gagal menyimpan histori: {e}")
     
     def registrasi(self):
         """Proses registrasi akun baru"""
@@ -26,6 +78,18 @@ class SistemLogin:
             return False
         
         self.akun_terdaftar[username] = password
+        self.simpan_akun()  # Simpan ke file
+        
+        # Inisialisasi histori untuk akun baru
+        if username not in self.histori_login:
+            self.histori_login[username] = {
+                "tanggal_dibuat": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "total_login": 0,
+                "riwayat_login": [],
+                "statistik_game": []
+            }
+        self.simpan_histori()  # Simpan histori ke file
+        
         print(f"✓ Akun '{username}' berhasil dibuat! Selamat datang!")
         return True
     
@@ -40,10 +104,40 @@ class SistemLogin:
         
         if username in self.akun_terdaftar and self.akun_terdaftar[username] == password:
             print(f"✓ Selamat datang kembali, {username}! 👋")
+            
+            # Catat login ke histori
+            if username in self.histori_login:
+                self.histori_login[username]["total_login"] += 1
+                self.histori_login[username]["riwayat_login"].append(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                )
+            self.simpan_histori()  # Simpan histori update
+            
             return username
         else:
             print("❌ Username atau password salah!")
             return None
+    
+    def lihat_statistik(self, username):
+        """Tampilkan statistik pengguna"""
+        if username in self.histori_login:
+            data = self.histori_login[username]
+            print("\n" + "="*50)
+            print(f"📊 STATISTIK PEMAIN: {username}")
+            print("="*50)
+            print(f"📅 Tanggal Dibuat: {data['tanggal_dibuat']}")
+            print(f"🔢 Total Login: {data['total_login']} kali")
+            
+            if data['riwayat_login']:
+                print(f"⏰ Login Terakhir: {data['riwayat_login'][-1]}")
+            
+            if data['statistik_game']:
+                print(f"\n📈 Statistik Game:")
+                for stat in data['statistik_game'][-5:]:  # Tampilkan 5 permainan terakhir
+                    print(f"  - {stat['tanggal']}: Level {stat['kesulitan']} | "
+                          f"HP Akhir: {stat['hp_akhir']}/{stat['hp_max']} | "
+                          f"Kristal: {stat['kristal']}/7")
+            print("="*50)
     
     def menu_utama_login(self):
         """Menu utama untuk login dan registrasi"""
@@ -53,9 +147,10 @@ class SistemLogin:
             print("╚" + "="*48 + "╝")
             print("\n1. Login")
             print("2. Registrasi")
-            print("3. Keluar Game")
+            print("3. Lihat Statistik")
+            print("4. Keluar Game")
             
-            pilihan = input("\nPilihan (1-3): ")
+            pilihan = input("\nPilihan (1-4): ")
             
             if pilihan == "1":
                 username = self.login()
@@ -64,6 +159,9 @@ class SistemLogin:
             elif pilihan == "2":
                 self.registrasi()
             elif pilihan == "3":
+                username = input("Masukkan username: ").strip()
+                self.lihat_statistik(username)
+            elif pilihan == "4":
                 print("\nTerima kasih telah bermain! 👋")
                 exit()
             else:
@@ -73,6 +171,9 @@ class Pemain:
     def __init__(self, nama, tingkat_kesulitan="normal"):
         self.nama = nama
         self.tingkat_kesulitan = tingkat_kesulitan
+        
+        # Waktu mulai game
+        self.waktu_mulai = datetime.now()
         
         # HP berdasarkan tingkat kesulitan
         if tingkat_kesulitan == "mudah":
@@ -282,62 +383,124 @@ Untuk membuktikan kekuatanmu, aku akan menguji kemampuanmu!'
 
 
 def bertemu_monster_hutan(pemain):
-    print("\n👹 BERTEMU MONSTER HUTAN! 👹")
-    print("─" * 40)
-    print("Tiba-tiba, seekor Werewolf keluar dari bayangan!")
-    print("Matanya bersinar merah... dan dia mengaum keras!")
+    print("\n👹 PERTARUNGAN BOSS: WEREWOLF HUTAN 👹")
+    print("═" * 50)
+    print("Seekor Werewolf legendaris dengan mata merah menyala!")
+    print("Dia adalah penjaga Hutan yang telah menunggu musuh sejati...")
+    time.sleep(1)
     
-    print("\nApa yang akan kamu lakukan?")
-    print("1. Lari secepat mungkin")
-    print("2. Hadapi monster (jika punya senjata)")
-    print("3. Coba berbicara dengannya")
+    # Boss stats
+    boss_hp = 80 if pemain.tingkat_kesulitan == "mudah" else (60 if pemain.tingkat_kesulitan == "sulit" else 70)
+    boss_max_hp = boss_hp
     
-    pilihan = input("\nPilihan (1-3): ")
+    print("\n┌─ STRATEGI PERTARUNGAN ─┐")
+    print("1. ⚔️  SERANGAN BIASA (Damage: 15-20, Mana: 0)")
+    print("2. 🔥 SERANGAN KHUSUS (Damage: 30-40, Mana: 30)")
+    print("3. 🛡️  PERTAHANAN (Reduce damage 50%, Mana: 20)")
+    print("4. 💚 PENYEMBUHAN (Heal: 25, Mana: 35)")
+    print("5. 🏃 MELARIKAN DIRI (50% berhasil)")
+    print("└────────────────────────┘")
     
-    if pilihan == "1":
-        if random.random() > 0.5:
-            print("\n✓ Kamu berhasil lari! Monster itu marah dan mengejar, tapi kamu lebih cepat!")
-            pemain.hp -= 10
-            print(f"HP berkurang 10 (sekarang: {pemain.hp})")
-        else:
-            print("\n✗ Monster menangkapmu! Kamu terluka parah!")
-            pemain.hp -= 30
-            print(f"HP berkurang 30 (sekarang: {pemain.hp})")
-            if pemain.hp <= 0:
-                game_over_kalah(pemain)
-                return
+    pertarungan_berlangsung = True
+    giliran_pemain = True
+    damage_multiplier = 1.3 if pemain.tingkat_kesulitan == "sulit" else 1.0
     
-    elif pilihan == "2":
-        if "pedang ajaib" in pemain.inventaris:
-            print("\n⚔️ PERTARUNGAN! ⚔️")
-            print("Kamu mengeluarkan pedang ajaib dan melawan monster!")
-            time.sleep(1)
-            if random.random() > 0.4:
-                print("✓ KEMENANGAN! Monster itu terkapar!");
-                print("Sebelum menghilang, monster meninggalkan medali emas 🏅")
-                pemain.ambil_item("Medali Emas")
-                pemain.misteri_terpecahkan += 1
-                print(f"Misteri terpecahkan: {pemain.misteri_terpecahkan}/3")
+    while pertarungan_berlangsung:
+        print(f"\n┌─ STATUS ─────────┐")
+        print(f"│ Pemain HP:  {pemain.hp}/{pemain.max_hp} ({int(pemain.hp/pemain.max_hp*100)}%)")
+        print(f"│ Mana:       {pemain.mana}/{pemain.max_mana}")
+        print(f"│ Werewolf: {boss_hp}/{boss_max_hp} ({int(boss_hp/boss_max_hp*100)}%)")
+        print(f"└────────────────────┘")
+        
+        if giliran_pemain:
+            pilihan = input("\nPilahan aksi (1-5): ")
+            
+            if pilihan == "1":  # Serangan biasa
+                damage = random.randint(15, 20)
+                boss_hp -= damage
+                print(f"⚔️  Kamu menyerang! Damage: {damage}")
+                pemain.regenerasi_mana(5)
+                
+            elif pilihan == "2":  # Serangan khusus
+                if pemain.gunakan_mana(30):
+                    if random.random() > 0.3:  # 70% hit rate
+                        damage = int(random.randint(30, 40) * damage_multiplier)
+                        boss_hp -= damage
+                        print(f"🔥 COMBO SERANGAN! Damage KRITIS: {damage}!")
+                    else:
+                        print("🔥 Serangan khususmu meleset!")
+                    pemain.regenerasi_mana(10)
+                else:
+                    print("❌ Mana tidak cukup! Mana minimum 30 dibutuhkan.")
+                    continue
+                    
+            elif pilihan == "3":  # Pertahanan
+                if pemain.gunakan_mana(20):
+                    print("🛡️  Kamu mengambil posisi pertahanan!")
+                    pemain.boost_defense = 1
+                    pemain.regenerasi_mana(15)
+                else:
+                    print("❌ Mana tidak cukup!")
+                    continue
+                    
+            elif pilihan == "4":  # Penyembuhan
+                if pemain.gunakan_mana(35):
+                    heal = 25
+                    pemain.hp = min(pemain.hp + heal, pemain.max_hp)
+                    print(f"💚 Kamu menyembuhkan diri! HP +{heal}")
+                    pemain.regenerasi_mana(10)
+                else:
+                    print("❌ Mana tidak cukup!")
+                    continue
+                    
+            elif pilihan == "5":  # Lari
+                if random.random() > 0.5:
+                    print("✓ Kamu berhasil melarikan diri dari pertarungan!")
+                    return
+                else:
+                    print("✗ Werewolf meninggalkan rasa malu saat kamu coba lari!")
+                    boss_hp -= 5  # Damage saat lari gagal
+                    
             else:
-                print("✗ Monster terlalu kuat! Kamu terluka!")
-                pemain.hp -= 25
-                print(f"HP berkurang 25 (sekarang: {pemain.hp})")
-        else:
-            print("\n✗ Kamu tidak memiliki senjata! Monster menyerangmu!")
-            pemain.hp -= 35
-            print(f"HP berkurang 35 (sekarang: {pemain.hp})")
-            if pemain.hp <= 0:
-                game_over_kalah(pemain)
-                return
-    
-    elif pilihan == "3":
-        print("\nMonster menatap matamu... suara dalam berkata...")
-        print("'Aku adalah penjaga hutan. Aku menunggu yang dapat memecahkan misteri kami.'")
-        print("'Jika kamu bisa mengalahkan Naga di Kuil, aku akan memberikan hadiah.'")
-        pemain.ambil_item("Kunci Hutan")
-    
-    print("\nApa lagi yang ingin kamu lakukan?")
-    print("1. Kembali ke gerbang")
+                print("❌ Pilihan tidak valid!")
+                continue
+            
+            # Serangan boss
+            if boss_hp > 0:
+                time.sleep(1)
+                boss_damage = random.randint(12, 18)
+                
+                if pemain.boost_defense > 0:
+                    boss_damage = int(boss_damage * 0.5)
+                    print(f"😤 Werewolf menyerang! Damage: {boss_damage} (pertahanan aktif)")
+                    pemain.boost_defense = 0
+                else:
+                    print(f"😤 Werewolf menyerang! Damage: {boss_damage}")
+                
+                boss_damage = int(boss_damage * damage_multiplier)
+                pemain.hp -= boss_damage
+                
+                if pemain.hp <= 0:
+                    print(f"\n💀 Kamu kalah! Werewolf mengakhiri pertarunganmu...")
+                    game_over_kalah(pemain)
+                    return
+        
+        # Cek kemenangan
+        if boss_hp <= 0:
+            print("\n" + "="*50)
+            print("⭐ KEMENANGAN! ⭐")
+            print("Werewolf terjatuh dan menatapmu dengan hormat...")
+            print("Cahaya putih membungkus tubuhnya...")
+            print("'Akhirnya... ada yang kuat dalam misteri ini'")
+            print("Dia meninggalkan kristal bercahaya: Kristal Energi Kekuatan")
+            print("="*50)
+            pemain.ambil_item("Kristal Energi Kekuatan")
+            pemain.misteri_terpecahkan += 1
+            pemain.pertempuran_menang += 1
+            pemain.hp = min(pemain.hp + 30, pemain.max_hp)
+            print(f"✓ HP dipulihkan! HP sekarang: {pemain.hp}")
+            pertarungan_berlangsung = False
+
     print("2. Jelajahi lebih jauh")
     
     pilihan2 = input("\nPilihan (1-2): ")
@@ -926,11 +1089,11 @@ kamu bisa memperbaiki kesalahan-kesalahan kritis!'
 
 def gua_naga_purba(pemain):
     """
-    Gua Naga Purba - Lokasi SANGAT SULIT - Pertarungan Final
+    Gua Naga Purba - Lokasi SANGAT SULIT - Pertarungan Final BOSS
     Penjaga: Naga Purba (Manifestasi dari Kutukan Malachar)
     """
     print("\n" + "="*60)
-    print("🐉 GUA NAGA PURBA - LOKASI SANGAT SULIT 🐉")
+    print("🐉 GUA NAGA PURBA - BRAWL BOS SUPER SULIT 🐉")
     print("="*60)
     print("Penjaga Terakhir: Naga Purba (Inti Kutukan Malachar)")
     print("="*60)
@@ -938,9 +1101,11 @@ def gua_naga_purba(pemain):
     print("Kamu memasuki gua yang sangat gelap dan berbau sulfur.")
     print("Batu-batu raksasa dengan goresan cakar naga terlihat di mana-mana!")
     print("Suara gemuruh seperti pertarungan kuno yang tak pernah berakhir...")
+    time.sleep(1)
     
     print("\nTiba-tiba, cahaya merah membara menerangi gua!")
     print("Naga Purba dengan tubuh setara dengan bukit keluar dari kedalaman!")
+    time.sleep(1)
     
     print("\n" + "─"*60)
     print("NAGA PURBA berbicara dengan suara yang mengguncang dunia:")
@@ -948,90 +1113,175 @@ def gua_naga_purba(pemain):
     print("""
 'Aku adalah Naga Purba, inti dari kutukan Malachar!
 Selama 500 tahun aku dipaksa menahan beban kegelapan ini.
-Kamu telah mengumpulkan 6 kristal energi dari para penjaga.
-
-Sekarang, pilihan ada di tanganmu:
-1. Melawanku dengan kekuatan brutal
-2. Menggunakan kebijaksanaan dan negosiasi
-3. Menyatukan kekuatan 6 kristal untuk mengalahkanku'
+Kamu telah sampai ke sini... berarti kamu layak mendapatkan kesempatan.'
     """)
+    time.sleep(1)
+    
+    # Boss stats
+    boss_hp = 150 if pemain.tingkat_kesulitan != "sulit" else 180
+    boss_max_hp = boss_hp
+    boss_stage = 1  # Fase 1 dari 2
     
     # Multiplier tingkat kesulitan
-    if pemain.tingkat_kesulitan == "sulit":
-        damage = 50
-        reward_hp = 35
-    else:
-        damage = 40
-        reward_hp = 45
+    damage_multiplier = 1.4 if pemain.tingkat_kesulitan == "sulit" else 1.0
     
-    print("\nApa yang akan kamu lakukan?")
-    print("1. Serang dengan semua kekuatan")
-    print("2. Gunakan diplomasi dan kebijaksanaan")
-    print("3. Satukan kekuatan 6 kristal (jika semua dimiliki)")
+    pertarungan_berlangsung = True
+    giliran = 0
+    pemain_super_hits = 0
     
-    pilihan = input("\nPilihan (1-3): ")
+    print("\n┌─ OPSI PERTARUNGAN NAGA PURBA ─┐")
+    print("1. ⚔️  SERANGAN BIASA (Damage: 15-25)")
+    print("2. 🔥 LEDAKAN MAGIS (Damage: 35-50, Mana: 40)")
+    print("3. 🛡️  PERTAHANAN MAGICAL (Reduce 60%, Mana: 30)")
+    print("4. 💚 MENYEMBUHKAN (HP: 30, Mana: 40)")
+    print("5. ⭐ SUPER HIT (Random besar, Mana: 50)")
+    print("6. 🏃 MUNDUR (30% berhasil)")
+    print("└──────────────────────────────┘")
     
-    if pilihan == "1":
-        if random.random() > 0.4:
-            print("\n⚔️ Pertarungan yang luar biasa dahsyat!")
-            print("Kamu berhasil mengalahkan Naga Purba dengan kemenangan mulia!")
-            print("Naga itu runtuh dan cahaya putih mulai membanjiri gua...")
-            print("Kristal Energi Pemecah Kutukan bersinar terang! 💎✨")
-            pemain.ambil_item("Kristal Energi Pemecah Kutukan")
-            pemain.misteri_terpecahkan += 1
-            pemain.hp += reward_hp
-            print(f"HP pulih +{reward_hp} (sekarang: {pemain.hp})")
+    while pertarungan_berlangsung:
+        print(f"\n┌─ FASE {boss_stage} STATUS ──────────┐")
+        print(f"│ Pemain HP:  {pemain.hp}/{pemain.max_hp}")
+        print(f"│ Mana:       {pemain.mana}/{pemain.max_mana}")
+        print(f"│ Naga HP:    {boss_hp}/{boss_max_hp} ({int(boss_hp/boss_max_hp*100)}%)")
+        print(f"└───────────────────────────────┘")
+        
+        # Boss phase 2 (50% health)
+        if boss_hp < boss_max_hp * 0.5 and boss_stage == 1:
+            boss_stage = 2
+            print("\n🔥 NAGA PURBA MEMASUKI FASE KEDUA! 🔥")
+            print("Serangannya menjadi dua kali lebih kuat!")
+            time.sleep(2)
+        
+        pilihan = input("\nPilihan aksi (1-6): ")
+        
+        if pilihan == "1":  # Serangan biasa
+            damage = random.randint(15, 25)
+            boss_hp -= damage
+            print(f"⚔️  Kamu menyerang! Damage: {damage}")
+            
+        elif pilihan == "2":  # Ledakan Magis
+            if pemain.gunakan_mana(40):
+                base_damage = random.randint(35, 50)
+                damage = int(base_damage * damage_multiplier)
+                if random.random() > 0.25:  # 75% hit
+                    boss_hp -= damage
+                    print(f"🔥 LEDAKAN MAGIS! CRITICAL HIT - Damage: {damage}!")
+                else:
+                    print("🔥 Ledakan magis meleset dari target yang gesit!")
+            else:
+                print("❌ Mana tidak cukup (butuh 40)!")
+                continue
+                
+        elif pilihan == "3":  # Pertahanan Magical
+            if pemain.gunakan_mana(30):
+                pemain.boost_defense = 2  # 60% reduction
+                print("🛡️  Kamu membuat perlindungan magical! Damage berkurang 60%!")
+            else:
+                print("❌ Mana tidak cukup (butuh 30)!")
+                continue
+                
+        elif pilihan == "4":  # Penyembuhan
+            if pemain.gunakan_mana(40):
+                heal = 30
+                pemain.hp = min(pemain.hp + heal, pemain.max_hp)
+                print(f"💚 Kamu menyembuhkan diri! HP +{heal}")
+            else:
+                print("❌ Mana tidak cukup (butuh 40)!")
+                continue
+                
+        elif pilihan == "5":  # Super Hit
+            if pemain.gunakan_mana(50):
+                if random.random() > 0.4:  # 60% hit rate
+                    damage = random.randint(60, 90)
+                    boss_hp -= damage
+                    pemain_super_hits += 1
+                    print(f"⭐ SUPER HIT! Damage MASSIF: {damage}!")
+                else:
+                    print("⭐ Super hit gagal! Naga menghindar dengan tangkas!")
+            else:
+                print("❌ Mana tidak cukup (butuh 50)!")
+                continue
+                
+        elif pilihan == "6":  # Mundur
+            if random.random() > 0.7:  # 30% success
+                print("✓ Kamu berhasil mundur dari pertarungan!")
+                print("Namun, kamu harus kembali untuk menyelesaikan ini...")
+                return
+            else:
+                print("✗ Naga memblokir jalan keluarmu!")
+                boss_hp += 10  # Boost for failed escape
+                
         else:
-            print("\n✗ Naga Purba terlalu kuat! Serangannya melampaui batas!")
-            pemain.hp -= damage
-            print(f"HP berkurang {damage} (sekarang: {pemain.hp})")
-    elif pilihan == "2":
-        print("\nKamu berbicara dengan penuh kebijaksanaan...")
-        print("'Kamu adalah korban kutukan, bukan penyebabnya.'")
-        print("\nNaga Purba merunduk dan air mata cahaya jatuh...")
-        print("'Akhirnya, seseorang memahami dengannya. Terima kasih...'")
-        print("Kristal Energi Pemecah Kutukan diberikan dengan tenang! 💎✨")
-        pemain.ambil_item("Kristal Energi Pemecah Kutukan")
-        pemain.misteri_terpecahkan += 1
-        pemain.hp += (reward_hp + 20)
-        print(f"HP pulih +{reward_hp + 20} (sekarang: {pemain.hp})")
-    elif pilihan == "3":
-        if pemain.misteri_terpecahkan >= 6:
-            print("\nKamu mengeluarkan ke-6 kristal energi!")
-            print("Cahaya warna-warni memancar dari kristal-kristal itu...")
-            print("Kekuatan semua penjaga bersatu dalam satu cahaya perkasa!")
-            print("\nNaga Purba tersengkal oleh kekuatan tersebut...")
-            print("Kutukan Malachar mulai rontok!")
-            print("Kristal Energi Pemecah Kutukan terbentuk dari kesatuan! 💎✨✨✨")
-            pemain.ambil_item("Kristal Energi Pemecah Kutukan")
-            pemain.misteri_terpecahkan += 1
-            pemain.hp = pemain.max_hp
-            print(f"HP penuh! (sekarang: {pemain.hp})")
-        else:
-            print(f"\nKamu hanya memiliki {pemain.misteri_terpecahkan} kristal dari 6!")
-            print("Kamu belum cukup kuat untuk menggunakan strategi ini.")
-            print("Naga Purba menyerang dengan gemas!")
-            pemain.hp -= 30
+            print("❌ Pilihan tidak valid!")
+            continue
+        
+        # Regenerasi mana pemain
+        pemain.regenerasi_mana(8)
+        
+        # Serangan Naga
+        if boss_hp > 0:
+            giliran += 1
+            time.sleep(1)
+            
+            # Serangan berbeda di fase 2
+            if boss_stage == 1:
+                naga_damage = random.randint(18, 28)
+                naga_attack = random.choice(["Cakar perkasa", "Napas api naga", "Ekor pukul"])
+            else:
+                naga_damage = random.randint(25, 40)
+                naga_attack = random.choice(["Serangan triple Cakar", "Ledakan napas api super", "Pukulan Ekor yang mengguncang"])
+            
+            if pemain.boost_defense > 0:
+                naga_damage = int(naga_damage * 0.4)
+                print(f"🛡️ {naga_attack}! Damage: {naga_damage} (Pertahanan aktif!)")
+                pemain.boost_defense = 0
+            else:
+                print(f"😤 {naga_attack}! Damage: {naga_damage}")
+            
+            naga_damage = int(naga_damage * damage_multiplier)
+            pemain.hp -= naga_damage
+            
             if pemain.hp <= 0:
+                print(f"\n💀 Kamu kalah! HP habis dalam pertarungan dengan Naga Purba...")
                 game_over_kalah(pemain)
                 return
-    
-    if pemain.hp <= 0:
-        game_over_kalah(pemain)
-        return
+        
+        # Cek kemenangan
+        if boss_hp <= 0:
+            print("\n" + "="*60)
+            print("⭐ KEMENANGAN BESAR! ⭐")
+            print("="*60)
+            print("Naga Purba terjatuh dengan gemuruh yang menggetarkan bumi...")
+            print("Cahaya putih membanjiri seluruh gua...")
+            print("Tubuh Naga Purba bersinar dan berubah menjadi seorang pria bijak...")
+            print(f"\nKau telah mengalahkan bos dengan {pemain_super_hits} super hits!")
+            print("\n'Terima kasih... aku akhirnya bebas dari kutukan ini.'")
+            print("'500 tahun penderitaan... dan kamu yang membebaskanku.'")
+            print("\nKristal Energi Pemecah Kutukan terbentuk dengan cahaya emas! 💎✨")
+            print("="*60)
+            
+            pemain.ambil_item("Kristal Energi Pemecah Kutukan")
+            pemain.misteri_terpecahkan += 1
+            pemain.pertempuran_menang += 1
+            
+            # Massive HP restore
+            pemain.hp = min(pemain.hp + 60, pemain.max_hp)
+            print(f"\n✓ Kamu menerima healing besar! HP sekarang: {pemain.hp}/{pemain.max_hp}")
+            pertarungan_berlangsung = False
     
     print("\n" + "="*60)
-    print("✨ KUTUKAN MULAI RONTOK! ✨")
+    print("✨ KUTUKAN AKHIRNYA RONTOK! ✨")
     print("="*60)
-    print("Cahaya emas mulai bersinar dari setiap sudut taman...")
-    print("Naga Purba kembali ke bentuk asalnya - seorang pria bijak...")
-    print("'Terima kasih. Taman dan kami akhirnya bebas dari kutukan.'")
+    print("Cahaya emas menyinar dari setiap sudut taman magis...")
+    print("Naga Purba (kini kembali manusia) tersenyum dengan damai...")
+    print("'Selesaikan misimu. Dunia akan terbebas karena keberanianmu.'")
     print("\nSebuah portal cahaya terbentuk di depanmu...")
-    print("'Pergilah, dan selesaikan misimu di Ruang Harta Karun Terakhir!'")
+    print("Arah menuju: RUANG HARTA KARUN TERAKHIR")
     print("="*60)
     
     input("\nTekan ENTER untuk memasuki portal akhir...")
     ruang_harta_karun_final(pemain)
+
 
 def taman_bunga_pesona(pemain):
     """
@@ -1113,13 +1363,14 @@ def perpustakaan_kuno(pemain):
     Penjaga: Pustakawan Kuno (Penjaga Pengetahuan)
     """
     print("\n" + "="*60)
-    print("📚 PERPUSTAKAAN KUNO - LOKASI SEDANG 📚")
+    print("📚 PERPUSTAKAAN KUNO - TANTANGAN INTELEKTUAL 📚")
     print("="*60)
     print("Penjaga: Pustakawan Kuno (Penjaga Pengetahuan)")
     print("="*60)
     
     print("Kamu memasuki perpustakaan raksasa dengan buku-buku berusia berabad-abad.")
     print("Debu membang di udara, cahaya matahari menebus celah-celah jendela kuno.")
+    time.sleep(1)
     
     print("\nSeorang Pustakawan Tua dengan mata bijak mendekatimu dari balik rak buku!")
     
@@ -1132,62 +1383,104 @@ aku menjaga pengetahuan dunia di dalam buku-buku ini.
 
 Malachar menginginkan untuk menghapus semua pengetahuan, namun aku berhasil
 menyembunyikan sebagian. Sekarang aku menguji apakah kamu cukup cerdas
-untuk layak membawa pengetahuan ini keluar dari taman!'
+untuk layak membawa pengetahuan ini keluar dari taman!
+
+Siapkan diri. Ada 4 pertanyaan dengan tingkat kesulitan TINGGI.
+Kamu harus menjawab setidaknya 3 dengan benar untuk lulus!'
     """)
-    
-    print("'Jawab 3 pertanyaan trivia, dan hadiah menanti!'")
+    time.sleep(1)
     
     benar_terjawab = 0
+    salah_total = 0
     
     pertanyaan = [
         {
-            "q": "Berapa jumlah benua di Bumi?",
-            "pilihan": ["5", "6", "7", "8"],
-            "jawab": "1"  # Index 1 = 6
+            "q": "Berapakah kombinasi dari 10 pilih 3? (C(10,3))",
+            "pilihan": ["30", "45", "60", "120"],
+            "jawab": "2",  # 120
+            "penjelasan": "Kombinasi C(10,3) = 10!/(3!*7!) = 120"
         },
         {
-            "q": "Siapa penulis 'Laskar Pelangi'?",
-            "pilihan": ["Pramoedya Ananta Toer", "Andrea Hirata", "Sutan Syamir", "Habiburrahman El Shirazy"],
-            "jawab": "1"  # Index 1 = Andrea Hirata
+            "q": "Siapa penulis novel 'Laskar Pelangi' dan tahun publikasinya?",
+            "pilihan": ["Pramoedya (1985)", "Andrea Hirata (2008)", "Sutan Syamir (2000)", "Sukarno (1950)"],
+            "jawab": "1",  # Andrea Hirata (2008)
+            "penjelasan": "Laskar Pelangi ditulis oleh Andrea Hirata dan dipublikasikan tahun 2005"
         },
         {
-            "q": "Manakah planet terbesar di tata surya kita?",
-            "pilihan": ["Saturnus", "Neptunus", "Jupiter", "Uranus"],
-            "jawab": "2"  # Index 2 = Jupiter
+            "q": "Manakah diantara berikut yang BUKAN termasuk asam amino esensial?",
+            "pilihan": ["Valin", "Leucin", "Glutamat", "Isoleucin"],
+            "jawab": "2",  # Glutamat bukan esensial
+            "penjelasan": "Glutamat memang asam amino, tapi tidak esensial (tubuh bisa memproduksinya)"
+        },
+        {
+            "q": "Dalam periode 1900-2024, berapa kali Indonesia telah mengalami pergantian konstitusi utama?",
+            "pilihan": ["2 kali", "3 kali", "4 kali", "5 kali"],
+            "jawab": "2",  # 4 kali (UUD 1945, Konstitusi RIS 1949, UUD Sementara 1950, kembali UUD 1945)
+            "penjelasan": "Indonesia telah memiliki 4 konstitusi: UUD 1945, Konstitusi RIS, UUD Sementara, dan kembali UUD 1945"
         }
     ]
     
+    print("Tidak ada waktu untuk berpikir lama - Pustakawan akan menguji dirimu!\n")
+    
     for i, item in enumerate(pertanyaan, 1):
-        print(f"\n❓ PERTANYAAN {i}/3")
+        print(f"\n{'='*50}")
+        print(f"❓ PERTANYAAN {i}/4 - Tingkat Kesulitan: TINGGI")
+        print(f"{'='*50}")
         print(f"{item['q']}")
+        print("\nOpsi Jawaban:")
         for j, pilihan in enumerate(item['pilihan']):
-            print(f"{j}. {pilihan}")
+            print(f"  {j}. {pilihan}")
         
-        jawaban = input("\nJawaban Anda (0-3): ")
-        
-        if jawaban == item['jawab']:
-            print("✓ BENAR! Buku berkobar dengan cahaya emas.")
-            benar_terjawab += 1
-        else:
-            print(f"✗ SALAH! Jawaban yang benar adalah: {item['pilihan'][int(item['jawab'])]}")
-            pemain.hp -= 10
-            print(f"HP berkurang 10 (sekarang: {pemain.hp})")
+        # Hanya 30 detik untuk jawab
+        try:
+            jawaban = input("\nJawaban Anda (0-3): ").strip()
+            
+            if jawaban == item['jawab']:
+                print(f"✓ BENAR! {item['penjelasan']}")
+                benar_terjawab += 1
+                print("Buku berkobar dengan cahaya emas yang indah.")
+            else:
+                print(f"✗ SALAH!")
+                print(f"   Jawaban yang benar adalah: {item['pilihan'][int(item['jawab'])]}")
+                print(f"   {item['penjelasan']}")
+                salah_total += 1
+                
+                # Damage yang lebih besar untuk difficulty sulit
+                damage = 15 if pemain.tingkat_kesulitan == "normal" else 20
+                pemain.hp -= damage
+                print(f"HP berkurang {damage} (sekarang: {pemain.hp})")
+                
+                if pemain.hp <= 0:
+                    print("\n💀 Kamu terlalu lemah dalam pengetahuan untuk melanjutkan...")
+                    game_over_kalah(pemain)
+                    return
+        except:
+            print("❌ Input tidak valid! Pertanyaan dijawab salah.")
+            salah_total += 1
+            pemain.hp -= 15
             if pemain.hp <= 0:
                 game_over_kalah(pemain)
                 return
+        
+        time.sleep(1)
     
-    print("\n" + "="*50)
-    print(f"HASIL: {benar_terjawab}/3 jawaban benar!")
-    print("="*50)
+    print("\n" + "="*60)
+    print(f"HASIL AKHIR: {benar_terjawab}/4 jawaban BENAR")
+    print("="*60)
     
-    if benar_terjawab >= 2:
-        print("\nPustakawan memberikan Kristal Energi Pengetahuan!")
-        print("'Pengetahuan adalah kekuatan yang paling berharga.'")
+    if benar_terjawab >= 3:
+        print("\n✓ LULUS UJIAN PENGETAHUAN!")
+        print("Pustakawan Kuno memberikan Kristal Energi Pengetahuan dengan hormat!")
+        print("'Kamu telah menunjukkan kebijaksanaan yang luar biasa.'")
+        print("'Pengetahuan sejati adalah kekuatan terbesar di dunia.'")
         pemain.ambil_item("Kristal Energi Pengetahuan")
         pemain.misteri_terpecahkan += 1
-        pemain.hp += 25
-        print(f"HP Anda pulih! (+25, sekarang: {pemain.hp})")
-        print(f"Misteri terpecahkan: {pemain.misteri_terpecahkan}/6")
+        
+        # Bonus HP berdasarkan score
+        bonus_hp = 25 + (benar_terjawab - 3) * 15
+        pemain.hp = min(pemain.hp + bonus_hp, pemain.max_hp)
+        print(f"✓ HP Anda pulih (+{bonus_hp}, sekarang: {pemain.hp})")
+        print(f"✓ Misteri terpecahkan: {pemain.misteri_terpecahkan}/7")
     else:
         print("\nPustakawan memberikan buku panduan sederhana...")
         pemain.ambil_item("Buku Panduan Sederhana")
